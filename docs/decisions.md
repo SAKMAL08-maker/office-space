@@ -13,6 +13,7 @@ One line per decision: what, why (where a reason was given), who decided, date.
 - The app uses Vercel's free plan. Owner, 2026-11-10.
 - Preview deployments stay logged out until PR 6, when giving them their own database is decided. Owner, 2026-11-10.
 - Attendance never closes by itself. It keeps running until the person checks out, even if they close the tab or keep it in the background. If they forget, using the check-in machine asks "You are still not checked out, would you like to?" with Yes and No, and Yes logs the check-out time. This replaces the 2-hour automatic close approved with the plan. Owner, 2026-11-10.
+- There is a separate check-out machine next to the check-in machine. Owner, 2026-11-10.
 
 ## Approved defaults
 
@@ -46,7 +47,7 @@ Chosen by Claude while building PR 1, 2026-11-10.
 
 Chosen by Claude while building PR 2, 2026-11-10.
 
-- The machine shows the same Yes or No question for every check-out, so there is one flow and a misclick cannot end someone's day.
+- The check-out machine checks out at once, with no question. It is greyed out while checked out.
 - Time log pages do not need a check-in, so people can read their hours after checking out.
 - Time log pages show the newest 200 records. Exports in PR 6 cover the full history.
 - The database refuses to delete a person who has attendance records, so hours cannot vanish by accident.

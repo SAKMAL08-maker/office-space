@@ -12,3 +12,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-10 | Connected Vercel and Neon checks, updated handoff and session log                              | Claude Code     |
 | 2026-11-10 | Accounts: schema, login, first admin, invites, password reset links, migration workflow, tests | Claude Code     |
 | 2026-11-10 | Attendance: check-in machine, check-out prompt, server gate, time log pages, migration, tests  | Claude Code     |
+| 2026-11-10 | Separate check-out machine on the home page                                                    | Claude Code     |

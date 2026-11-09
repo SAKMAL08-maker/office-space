@@ -4,7 +4,7 @@ import { getOpenAttendance } from "@/server/attendance";
 import { requireUser } from "@/server/session";
 import { Loading, quietButtonClass } from "@/ui/form-parts";
 import { LocalTime } from "@/ui/local-time";
-import { CheckInMachine } from "./check-in-machine";
+import { Machines } from "./machines";
 import { SignOutButton } from "./sign-out-button";
 
 async function Welcome() {
@@ -22,7 +22,7 @@ async function Welcome() {
           "You are checked out."
         )}
       </p>
-      <CheckInMachine />
+      <Machines checkedIn={open !== null} />
       <div className="flex flex-wrap justify-center gap-2">
         <Link href="/time-log" className={quietButtonClass}>
           My time log
