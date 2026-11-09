@@ -10,7 +10,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 
 | PR  | Name          | Status      |
 | --- | ------------- | ----------- |
-| 0   | Foundation    | In progress |
+| 0   | Foundation    | Done        |
 | 1   | Accounts      | Not started |
 | 2   | Attendance    | Not started |
 | 3   | Work items    | Not started |
