@@ -43,7 +43,8 @@ function StillCheckedInPrompt({
   );
 }
 
-export function CheckInMachine() {
+/** The check-in machine stays usable while checked in, because that is when it asks the question. */
+export function Machines({ checkedIn }: { checkedIn: boolean }) {
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -60,13 +61,13 @@ export function CheckInMachine() {
     });
   }
 
-  const press = () =>
+  const checkIn = () =>
     run(async () => {
       const { stillCheckedIn } = await pressMachineAction();
       setAsking(stillCheckedIn);
     });
 
-  const confirmCheckOut = () =>
+  const checkOut = () =>
     run(async () => {
       await checkOutAction();
       setAsking(false);
@@ -74,16 +75,22 @@ export function CheckInMachine() {
 
   return (
     <>
-      <button type="button" onClick={press} disabled={pending} className={buttonClass}>
-        Use check-in machine
-      </button>
+      <div className="flex flex-wrap justify-center gap-2">
+        <button type="button" onClick={checkIn} disabled={pending} className={buttonClass}>
+          Use check-in machine
+        </button>
+        <button
+          type="button"
+          onClick={checkOut}
+          disabled={pending || !checkedIn}
+          className={buttonClass}
+        >
+          Use check-out machine
+        </button>
+      </div>
       <FormError message={error} />
       {asking && (
-        <StillCheckedInPrompt
-          pending={pending}
-          onYes={confirmCheckOut}
-          onNo={() => setAsking(false)}
-        />
+        <StillCheckedInPrompt pending={pending} onYes={checkOut} onNo={() => setAsking(false)} />
       )}
     </>
   );
