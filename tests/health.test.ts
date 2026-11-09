@@ -14,13 +14,13 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  process.env.DATABASE_URL = realDatabaseUrl;
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
 describe("GET /api/health", () => {
   it("returns 503 without details when the database is unreachable", async () => {
-    process.env.DATABASE_URL = "postgres://nobody:secret-value@127.0.0.1:1/none";
+    vi.stubEnv("DATABASE_URL", "postgres://nobody:secret-value@127.0.0.1:1/none");
 
     const response = await callHealth();
 
@@ -29,7 +29,7 @@ describe("GET /api/health", () => {
   });
 
   it("returns 503 when DATABASE_URL is missing", async () => {
-    delete process.env.DATABASE_URL;
+    vi.stubEnv("DATABASE_URL", undefined);
 
     const response = await callHealth();
 
