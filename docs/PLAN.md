@@ -93,7 +93,7 @@ Files stay small and each 3D object is its own component.
 | 4   | 3D world      | Lobby, machine, floor, offices, click-to-walk, camera moves                                                               |
 | 5   | Cubicles live | Details panel, start working, indicators, presence, "who's working" list                                                  |
 | 6   | Backblaze     | Attachments, profile pictures, CSV exports                                                                                |
-| 7   | Hardening     | Login rate limits, phone layout, security review, full browser test run                                                   |
+| 7   | Hardening     | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
 
 Logic comes before 3D on purpose: the rules get tested first, and the scene only displays them.
 

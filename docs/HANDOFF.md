@@ -18,10 +18,7 @@ Only this wrap-up docs PR. Nothing is half-built.
 
 ## Open decisions (owner)
 
-- Why must an assignee approve a task before it creates a cubicle? Record the owner's words in `docs/decisions.md` by PR 3.
-- PR 7: Claude recommends adding protection against floods of traffic, because the owner chose invite-only partly to avoid the app being bombed, and the login page is still public. The owner has not decided yet.
-- Whether preview deployments get their own Neon database. Until then, leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment, so a preview cannot log anyone in.
-- Which Vercel plan to use. Hobby excludes commercial use, so a company team needs Pro.
+- At PR 6: whether preview deployments get their own Neon database. The owner chose to keep previews logged out until then, so leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
 
 ## Verified vs. not
 
@@ -38,4 +35,5 @@ Only this wrap-up docs PR. Nothing is half-built.
 - With `cacheComponents` on, anything reading cookies, headers, params or the database must sit inside `<Suspense>`. Read the request before touching `getAuth()`, so builds work without secrets.
 - This Next.js keeps a visited page alive but hidden after an in-app move. Login and logout use a full page load so that no password or private page stays in the browser.
 - The account tests empty every table, so they only run when the database name ends in `_test`. `@types/node` must stay at 24 or higher for Vitest.
-- The login limit (3 tries in 10 seconds per address) is kept per server instance and is shared by everyone behind one office connection. PR 7 replaces it.
+- The login limit (3 tries in 10 seconds per address) is kept per server instance and is shared by everyone behind one office connection. PR 7 replaces it and adds protection against floods of traffic, within what the free plan allows.
+- The app is on Vercel's free plan, which excludes commercial use. If a company starts relying on it, it needs Pro.
