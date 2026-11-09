@@ -4,7 +4,7 @@ One line per decision: what, why (where a reason was given), who decided, date.
 
 ## Product
 
-- Accounts are invite only, with email and password. Owner, 2026-11-10.
+- Accounts are invite only, with email and password, so that only the team can access the app and to avoid tanking or bombing it. Owner, 2026-11-10.
 - People click to walk, and other workers update every few seconds. Owner, 2026-11-10.
 - Backblaze stores task and project attachments, profile pictures and time log exports. Owner, 2026-11-10.
 - There is one cubicle per project a user created and one per task assigned to them. Owner, 2026-11-10.

@@ -11,7 +11,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | PR  | Name          | Status      |
 | --- | ------------- | ----------- |
 | 0   | Foundation    | Done        |
-| 1   | Accounts      | In review   |
+| 1   | Accounts      | Done        |
 | 2   | Attendance    | Not started |
 | 3   | Work items    | Not started |
 | 4   | 3D world      | Not started |
