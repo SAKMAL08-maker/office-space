@@ -11,7 +11,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | PR  | Name          | Status      |
 | --- | ------------- | ----------- |
 | 0   | Foundation    | Done        |
-| 1   | Accounts      | Not started |
+| 1   | Accounts      | In review   |
 | 2   | Attendance    | Not started |
 | 3   | Work items    | Not started |
 | 4   | 3D world      | Not started |
@@ -75,7 +75,7 @@ src/app/            pages and API routes
 src/world/          3D scenes (Lobby, Floor, OfficeRoom, Cubicle, Worker, CheckInMachine)
 src/ui/             2D panels, inbox, time log, forms
 src/server/         attendance, tasks, cubicles, storage, auth rules
-src/db/             schema + db/migrations/
+src/db/             schema + migrations/
 tests/              unit and browser tests
 docs/               PLAN, HANDOFF, decisions, AI usage, ai-logs/SESSION-LOG
 ```

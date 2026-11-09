@@ -6,7 +6,8 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 
 ## Changelog
 
-| Date       | Change                                                            | How it was made |
-| ---------- | ----------------------------------------------------------------- | --------------- |
-| 2026-11-10 | Foundation: scaffold, health check, tests, CI, project docs, plan | Claude Code     |
-| 2026-11-10 | Connected Vercel and Neon checks, updated handoff and session log | Claude Code     |
+| Date       | Change                                                                                         | How it was made |
+| ---------- | ---------------------------------------------------------------------------------------------- | --------------- |
+| 2026-11-10 | Foundation: scaffold, health check, tests, CI, project docs, plan                              | Claude Code     |
+| 2026-11-10 | Connected Vercel and Neon checks, updated handoff and session log                              | Claude Code     |
+| 2026-11-10 | Accounts: schema, login, first admin, invites, password reset links, migration workflow, tests | Claude Code     |
