@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { getOpenAttendance } from "./attendance";
 import { getAuth } from "./auth";
 import { isRole, type Role } from "./validation";
 
@@ -25,5 +26,12 @@ export async function requireUser(): Promise<CurrentUser> {
 export async function requireAdmin(): Promise<CurrentUser> {
   const user = await requireUser();
   if (user.role !== "admin") notFound();
+  return user;
+}
+
+/** The check-in gate. Anyone not checked in is sent back to the lobby, where the machine is. */
+export async function requireCheckedIn(): Promise<CurrentUser> {
+  const user = await requireUser();
+  if (!(await getOpenAttendance(user.id))) redirect("/");
   return user;
 }

@@ -12,7 +12,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | --- | ------------- | ----------- |
 | 0   | Foundation    | Done        |
 | 1   | Accounts      | Done        |
-| 2   | Attendance    | Not started |
+| 2   | Attendance    | In review   |
 | 3   | Work items    | Not started |
 | 4   | 3D world      | Not started |
 | 5   | Cubicles live | Not started |
@@ -46,7 +46,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 2. Click the machine: your character walks over and checks in. An attendance record opens and the office floor unlocks.
 3. The floor is a grid of offices with name plates. Click a door to enter. Click a cubicle to walk there and open its details panel.
 4. In your own office, press **Start working here**. Your character sits down and the time starts counting against that project or task. Starting elsewhere ends the previous one automatically.
-5. To leave, walk to the machine and check out. This closes the work and attendance records. Log out is only offered after checking out.
+5. To leave, walk to the machine and check out. This closes the work and attendance records. Log out is only offered after checking out. Using the machine while still checked in asks "You are still not checked out, would you like to?" with Yes and No. Yes logs the check-out time. No leaves the record open.
 
 **Occupied cubicle indicator:** character seated, screen lit, coloured glow on the cubicle, floating label with name and project. The office door also shows a "working" badge, so you can spot it from the floor view.
 
@@ -105,7 +105,7 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 
 ## Defaults I chose (say if you want any changed)
 
-1. **Forgot to check out / closed the tab:** after 2 minutes of silence the character shows "away". After 2 hours of silence the record closes automatically, ends at the last signal so hours aren't inflated, and is marked "auto-closed".
+1. **Forgot to check out / closed the tab:** after 2 minutes of silence the character shows "away". Attendance keeps running until the person checks out (owner's change, replacing an automatic close after 2 hours). The machine reminds them, as in step 5 of the journey.
 2. **Time log visibility:** you see your own; admins see everyone's and can export them.
 3. **Finished work:** marking a task done or archiving a project removes its cubicle. History stays in the time log.
 4. **Who can start work:** only the cubicle's owner. Everyone else can look only.
@@ -123,7 +123,7 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 ## Verification
 
 - **Each PR:** lint, format check, unit tests and build all pass in CI against a real Postgres database.
-- **Unit tests:** double check-in blocked, gate refuses unchecked-in users, approve creates exactly one cubicle, decline creates none, switching cubicles closes the earlier session, auto-close uses the last signal.
+- **Unit tests:** double check-in blocked, gate refuses unchecked-in users, approve creates exactly one cubicle, decline creates none, switching cubicles closes the earlier session, attendance stays open until the person checks out.
 - **Browser tests:** two users. A checks in, assigns a task to B, B approves, the cubicle appears, B starts work, A sees the indicator within one update, B checks out, and the time log shows correct durations.
 - **Backblaze:** real upload and download on a preview deployment, and confirm an expired link fails.
 - **By eye:** render the 3D scenes at desktop and phone widths and look at them before calling any UI PR done.

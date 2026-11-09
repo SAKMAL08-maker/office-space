@@ -12,12 +12,13 @@ One line per decision: what, why (where a reason was given), who decided, date.
 - PR 7 adds protection against floods of traffic. Owner, 2026-11-10.
 - The app uses Vercel's free plan. Owner, 2026-11-10.
 - Preview deployments stay logged out until PR 6, when giving them their own database is decided. Owner, 2026-11-10.
+- Attendance never closes by itself. It keeps running until the person checks out, even if they close the tab or keep it in the background. If they forget, using the check-in machine asks "You are still not checked out, would you like to?" with Yes and No, and Yes logs the check-out time. This replaces the 2-hour automatic close approved with the plan. Owner, 2026-11-10.
 
 ## Approved defaults
 
 Proposed by Claude and approved by the owner with the plan, 2026-11-10.
 
-- A silent user shows as away after 2 minutes. After 2 hours the record closes at the last signal and is marked auto-closed, so hours are not inflated.
+- A silent user shows as away after 2 minutes. An automatic close after 2 hours was also approved here, and the owner has since replaced it (see Product).
 - Users see their own time log. Admins see everyone's and can export them.
 - A finished task or archived project loses its cubicle, and its history stays in the time log.
 - Only a cubicle's owner can start work there.
@@ -42,3 +43,10 @@ Chosen by Claude while building PR 1, 2026-11-10.
 - Invite links last 7 days and reset links last 24 hours, because an admin passes them on by hand. Each works once, and a newer link cancels the older one.
 - Passwords need at least 12 characters.
 - Admins choose Member or Admin when inviting, so a team can have more than one admin.
+
+Chosen by Claude while building PR 2, 2026-11-10.
+
+- The machine shows the same Yes or No question for every check-out, so there is one flow and a misclick cannot end someone's day.
+- Time log pages do not need a check-in, so people can read their hours after checking out.
+- Time log pages show the newest 200 records. Exports in PR 6 cover the full history.
+- The database refuses to delete a person who has attendance records, so hours cannot vanish by accident.

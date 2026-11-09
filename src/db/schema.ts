@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () =>
@@ -124,4 +133,29 @@ export const passwordResetLinks = pgTable(
     createdAt: createdAt(),
   },
   (table) => [index("password_reset_links_user_id_idx").on(table.userId)],
+);
+
+// A record stays open until its owner checks out. There is no automatic close.
+
+export const attendanceSessions = pgTable(
+  "attendance_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }).notNull().defaultNow(),
+    checkedOutAt: timestamp("checked_out_at", { withTimezone: true }),
+  },
+  (table) => [
+    // The database itself refuses a second open record, even if two check-ins arrive at once.
+    uniqueIndex("attendance_sessions_one_open_per_user")
+      .on(table.userId)
+      .where(sql`${table.checkedOutAt} is null`),
+    index("attendance_sessions_user_checked_in_idx").on(table.userId, table.checkedInAt),
+    check(
+      "attendance_sessions_order_check",
+      sql`${table.checkedOutAt} is null or ${table.checkedOutAt} >= ${table.checkedInAt}`,
+    ),
+  ],
 );
