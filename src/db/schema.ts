@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -157,5 +158,79 @@ export const attendanceSessions = pgTable(
       "attendance_sessions_order_check",
       sql`${table.checkedOutAt} is null or ${table.checkedOutAt} >= ${table.checkedInAt}`,
     ),
+  ],
+);
+
+// A task is a project offered to someone. It only becomes a project if they accept it.
+
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: text("id").primaryKey(),
+    senderId: text("sender_id")
+      .notNull()
+      .references(() => users.id),
+    receiverId: text("receiver_id")
+      .notNull()
+      .references(() => users.id),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    status: text("status", { enum: ["pending", "accepted", "rejected", "cancelled"] })
+      .notNull()
+      .default("pending"),
+    rejectReason: text("reject_reason"),
+    createdAt: createdAt(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (table) => [
+    check(
+      "tasks_status_check",
+      sql`${table.status} in ('pending', 'accepted', 'rejected', 'cancelled')`,
+    ),
+    check("tasks_not_to_self_check", sql`${table.senderId} <> ${table.receiverId}`),
+    index("tasks_receiver_status_idx").on(table.receiverId, table.status),
+    index("tasks_sender_created_idx").on(table.senderId, table.createdAt),
+  ],
+);
+
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    // Set when the project came from an accepted task. The task keeps the original wording.
+    sourceTaskId: text("source_task_id")
+      .unique()
+      .references(() => tasks.id),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("projects_owner_id_idx").on(table.ownerId)],
+);
+
+// Only active projects have a cubicle. Finishing a project deletes this row and keeps the project.
+
+export const cubicles = pgTable(
+  "cubicles",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id),
+    projectId: text("project_id")
+      .notNull()
+      .unique()
+      .references(() => projects.id),
+    seat: integer("seat").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    unique("cubicles_owner_seat_unique").on(table.ownerId, table.seat),
+    check("cubicles_seat_check", sql`${table.seat} >= 1`),
   ],
 );
