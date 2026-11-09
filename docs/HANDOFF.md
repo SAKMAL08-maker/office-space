@@ -18,7 +18,7 @@ Only this wrap-up docs PR. Nothing is half-built.
 
 ## Open decisions (owner)
 
-- Whether preview deployments get their own Neon database. Until then, leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment, so a preview cannot log anyone in.
+- At PR 6: whether preview deployments get their own Neon database. The owner chose to keep previews logged out until then, so leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
 
 ## Verified vs. not
 

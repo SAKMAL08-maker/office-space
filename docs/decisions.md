@@ -11,6 +11,7 @@ One line per decision: what, why (where a reason was given), who decided, date.
 - Anyone can assign any number of tasks to anyone, and the assignee must approve before a cubicle appears. The assignee has the power to accept or reject assigned tasks, to avoid malicious or unnecessary tasks in their room and to choose whether they want the task. Owner, 2026-11-10.
 - PR 7 adds protection against floods of traffic. Owner, 2026-11-10.
 - The app uses Vercel's free plan. Owner, 2026-11-10.
+- Preview deployments stay logged out until PR 6, when giving them their own database is decided. Owner, 2026-11-10.
 
 ## Approved defaults
 
