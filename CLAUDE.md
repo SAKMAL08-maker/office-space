@@ -27,7 +27,8 @@
 ## Rules that must not break
 
 - **Secrets:** real values live in Vercel env vars or `.env.local`. Only the blank `.env.example` is committed.
-- **Check-in gate:** it must be enforced on the server. Hiding a button is not enough.
+- **Check-in gate:** it must be enforced on the server with `requireCheckedIn()`. Hiding a button is not enough.
+- **Attendance:** a record stays open until its owner checks out. Nothing closes it automatically. Log out is only offered after checking out.
 - **Cubicles:** a task assigned by someone else creates a cubicle only after the assignee approves it.
 - **Files:** Backblaze storage stays private, with short-lived signed links only.
 - **Database changes:** each one is a new dated migration file. Never edit an old migration. Production is changed only by the Migrate production workflow, after the owner has read the SQL.

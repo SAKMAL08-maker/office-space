@@ -8,13 +8,16 @@ Merges to `main` deploy automatically. CI runs lint, format, typecheck, migratio
 
 ## In progress
 
-Only this wrap-up docs PR. Nothing is half-built.
+PR 2 (Attendance) is built on `feat/attendance` and is waiting for the owner's review. Its migration, `20261109175222_attendance.sql`, is not on production yet. It must be applied before the merge, because the home page reads the new table.
+
+Until PR 4 adds the 3D lobby, a "Use check-in machine" button on the home page stands in for the machine. `requireCheckedIn()` currently guards check-out only. PR 3 onward must call it in every office action.
 
 ## Next steps
 
-1. Start PR 2 (Attendance): check-in and check-out rules, the server gate `requireCheckedIn()`, and the time log page. See `docs/PLAN.md`. Log out must only be offered after checking out, so the Log out button on the home page has to change.
-2. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
-3. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
+1. Owner reads the attendance SQL and says yes. Run `gh workflow run migrate.yml --ref feat/attendance`, then merge PR 2.
+2. Start PR 3 (Work items): projects, tasks, approval inbox, cubicle creation.
+3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
+4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
 
 ## Open decisions (owner)
 
@@ -22,12 +25,13 @@ Only this wrap-up docs PR. Nothing is half-built.
 
 ## Verified vs. not
 
-- Tested: 27 Vitest tests in 5 files, on Postgres 17 in CI and on a throwaway local Postgres 18. Headless browser walk-through of the whole accounts flow on a local production build, at 1280px and 390px wide.
+- Tested: 46 Vitest tests in 6 files on a throwaway local Postgres 18. Headless browser walk-through of the whole accounts flow, and of check-in, the check-out prompt and both time logs, on a local production build at 1280px and 390px wide.
 - Tested live: the migration workflow succeeded. `/setup` showed its form and then locked. `/api/health` returned 200, public sign-up returned 404, and a made-up login returned 401.
 - Not verified: a direct query of the live tables, because Claude does not hold the database address. Invite and reset links on the live site. Preview deployments reaching a database.
 
 ## Watch out for
 
+- Attendance never closes by itself (owner's decision), so a forgotten check-out keeps counting until the person answers Yes at the machine. Nobody can correct a logged time yet.
 - `vercel link` writes a `VERCEL_OIDC_TOKEN` to `.env.local` and appends `.vercel` and `.env*` to `.gitignore`, which cancels the `!.env.example` exception. This folder is already linked. If it is relinked, delete that file and run `git restore .gitignore`.
 - Vercel settings only reach deployments built after they are added, so redeploy after changing one. Do not run `vercel env pull`, because it copies real secrets to this PC. `vercel env ls` shows names only.
 - Agreed limits on the Vercel login: reading status and logs is automatic; redeploys and setting changes need the owner's yes.
