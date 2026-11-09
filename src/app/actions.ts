@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { checkIn, checkOut } from "@/server/attendance";
 import { requireCheckedIn, requireUser } from "@/server/session";
+import { refreshWorkPages } from "@/server/work-pages";
 
 function refreshAttendancePages() {
-  revalidatePath("/");
+  refreshWorkPages();
   revalidatePath("/time-log");
   revalidatePath("/admin/time-log");
 }

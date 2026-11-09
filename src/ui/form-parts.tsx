@@ -9,6 +9,11 @@ export const buttonClass =
 export const quietButtonClass =
   "rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800";
 
+export const cardClass =
+  "flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800";
+
+export const mutedTextClass = "text-sm text-zinc-600 dark:text-zinc-400";
+
 export function AuthCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="flex flex-1 items-center justify-center p-4">
