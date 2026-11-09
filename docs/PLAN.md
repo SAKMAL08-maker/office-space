@@ -2,7 +2,7 @@
 
 ## Context
 
-The owner wants a web app that shows who is working on what, presented as a walkable 3D office seen from an angled top-down camera. Each user has a named office. Each office holds cubicles for that person's projects and approved tasks. Anyone checked in can look inside a cubicle, and an occupied cubicle is obvious at a glance. A check-in machine is the only way in and out, and it produces each user's time log.
+The owner wants a web app that shows who is working on what, presented as a walkable 3D office seen from an angled top-down camera. Each user has a named office. Each office holds cubicles for that person's projects and approved tasks. Anyone checked in can look inside a cubicle, and an occupied cubicle is obvious at a glance. A check-in machine and a check-out machine are the only way in and out, and they produce each user's time log.
 
 The project folder is empty, so this is a new build. Node 24, git and GitHub CLI (account `SAKMAL08-maker`) are ready. Vercel CLI runs through `npx`.
 
@@ -12,7 +12,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | --- | ------------- | ----------- |
 | 0   | Foundation    | Done        |
 | 1   | Accounts      | Done        |
-| 2   | Attendance    | In review   |
+| 2   | Attendance    | Done        |
 | 3   | Work items    | Not started |
 | 4   | 3D world      | Not started |
 | 5   | Cubicles live | Not started |
@@ -43,10 +43,10 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 **The journey**
 
 1. Log in, and you land in the lobby. Only the check-in machine works.
-2. Click the machine: your character walks over and checks in. An attendance record opens and the office floor unlocks.
+2. Click the check-in machine: your character walks over and checks in. An attendance record opens and the office floor unlocks.
 3. The floor is a grid of offices with name plates. Click a door to enter. Click a cubicle to walk there and open its details panel.
 4. In your own office, press **Start working here**. Your character sits down and the time starts counting against that project or task. Starting elsewhere ends the previous one automatically.
-5. To leave, walk to the machine and check out. This closes the work and attendance records. Log out is only offered after checking out. Using the machine while still checked in asks "You are still not checked out, would you like to?" with Yes and No. Yes logs the check-out time. No leaves the record open.
+5. To leave, walk to the check-out machine and check out. This closes the work and attendance records. Log out is only offered after checking out. Using the check-in machine while still checked in asks "You are still not checked out, would you like to?" with Yes and No. Yes logs the check-out time. No leaves the record open.
 
 **Occupied cubicle indicator:** character seated, screen lit, coloured glow on the cubicle, floating label with name and project. The office door also shows a "working" badge, so you can spot it from the floor view.
 
@@ -72,7 +72,7 @@ Database rules enforce the key facts: one open attendance per user, one open wor
 
 ```
 src/app/            pages and API routes
-src/world/          3D scenes (Lobby, Floor, OfficeRoom, Cubicle, Worker, CheckInMachine)
+src/world/          3D scenes (Lobby, Floor, OfficeRoom, Cubicle, Worker, CheckInMachine, CheckOutMachine)
 src/ui/             2D panels, inbox, time log, forms
 src/server/         attendance, tasks, cubicles, storage, auth rules
 src/db/             schema + migrations/
@@ -90,7 +90,7 @@ Files stay small and each 3D object is its own component.
 | 1   | Accounts      | Schema, login, invite links, first admin account, password reset by admin link                                            |
 | 2   | Attendance    | Check-in/out rules, server gate, time log page                                                                            |
 | 3   | Work items    | Projects, tasks, approval inbox, cubicle creation (plain 2D screens)                                                      |
-| 4   | 3D world      | Lobby, machine, floor, offices, click-to-walk, camera moves                                                               |
+| 4   | 3D world      | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
 | 5   | Cubicles live | Details panel, start working, indicators, presence, "who's working" list                                                  |
 | 6   | Backblaze     | Attachments, profile pictures, CSV exports                                                                                |
 | 7   | Hardening     | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
@@ -105,7 +105,7 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 
 ## Defaults I chose (say if you want any changed)
 
-1. **Forgot to check out / closed the tab:** after 2 minutes of silence the character shows "away". Attendance keeps running until the person checks out (owner's change, replacing an automatic close after 2 hours). The machine reminds them, as in step 5 of the journey.
+1. **Forgot to check out / closed the tab:** after 2 minutes of silence the character shows "away". Attendance keeps running until the person checks out (owner's change, replacing an automatic close after 2 hours). The check-in machine reminds them, as in step 5 of the journey.
 2. **Time log visibility:** you see your own; admins see everyone's and can export them.
 3. **Finished work:** marking a task done or archiving a project removes its cubicle. History stays in the time log.
 4. **Who can start work:** only the cubicle's owner. Everyone else can look only.

@@ -8,13 +8,13 @@ Merges to `main` deploy automatically. CI runs lint, format, typecheck, migratio
 
 ## In progress
 
-PR 2 (Attendance) is built on `feat/attendance` and is waiting for the owner's review. Its migration, `20261109175222_attendance.sql`, is not on production yet. It must be applied before the merge, because the home page reads the new table.
+PR 2 (Attendance, #6, merge `9c614e4`) is merged and live, and its migration is applied to Neon. A follow-up on `feat/check-out-machine` adds a separate check-out machine and is waiting for the owner's review. It needs no migration.
 
-Until PR 4 adds the 3D lobby, a "Use check-in machine" button on the home page stands in for the machine. `requireCheckedIn()` currently guards check-out only. PR 3 onward must call it in every office action.
+Until PR 4 adds the 3D lobby, "Use check-in machine" and "Use check-out machine" buttons on the home page stand in for the machines. `requireCheckedIn()` currently guards check-out only. PR 3 onward must call it in every office action.
 
 ## Next steps
 
-1. Owner reads the attendance SQL and says yes. Run `gh workflow run migrate.yml --ref feat/attendance`, then merge PR 2.
+1. Owner reviews the check-out machine PR and merges it.
 2. Start PR 3 (Work items): projects, tasks, approval inbox, cubicle creation.
 3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
 4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
