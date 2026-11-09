@@ -28,3 +28,14 @@ Recommended by Claude and approved by the owner with the plan, 2026-11-10.
 - Browsers upload straight to Backblaze with signed links, because Vercel limits request bodies to about 4.5 MB.
 - Logic is built before the 3D world, so the rules are tested first and the scene only displays them.
 - The `pg` driver is used so the same code runs on Neon and on the Postgres in CI.
+
+Recommended by Claude and chosen by the owner, 2026-11-10.
+
+- Migrations run from a manual GitHub Actions workflow, after the owner has read the SQL. A Vercel build step was ruled out, because a preview build could change the live database.
+- The first admin is created on a `/setup` page protected by a private `SETUP_TOKEN`, and the page locks once an admin exists.
+
+Chosen by Claude while building PR 1, 2026-11-10.
+
+- Invite links last 7 days and reset links last 24 hours, because an admin passes them on by hand. Each works once, and a newer link cancels the older one.
+- Passwords need at least 12 characters.
+- Admins choose Member or Admin when inviting, so a team can have more than one admin.

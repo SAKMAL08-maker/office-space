@@ -1,0 +1,30 @@
+name: Migrate production
+
+# Started by hand only, after the owner has read the SQL and said yes.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: migrate-production
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATE_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "The MIGRATE_DATABASE_URL secret is not set."
+            exit 1
+          fi
+          npm run db:migrate
