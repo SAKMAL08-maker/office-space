@@ -7,5 +7,8 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts"],
+    // The account tests share one database and empty it between tests.
+    fileParallelism: false,
+    testTimeout: 20_000,
   },
 });

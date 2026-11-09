@@ -26,6 +26,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://postgres:ci-only@localhost:5432/office_test
+      BETTER_AUTH_SECRET: ci-only-not-a-real-secret-0123456789
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -36,5 +37,12 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      - name: Check every schema change has a migration
+        run: |
+          npm run db:generate
+          git status --porcelain -- src/db/migrations
+          test -z "$(git status --porcelain -- src/db/migrations)"
+      # The same command that the Migrate production workflow runs.
+      - run: npm run db:migrate
       - run: npm test
       - run: npm run build
