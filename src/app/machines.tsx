@@ -5,6 +5,7 @@ import { buttonClass, FormError, quietButtonClass } from "@/ui/form-parts";
 import { checkOutAction, pressMachineAction } from "./actions";
 
 const FAILED = "That did not work. Check your connection and try again.";
+const NOT_CHECKED_IN = "You are not checked in. Use the check-in machine first.";
 
 function StillCheckedInPrompt({
   pending,
@@ -43,8 +44,11 @@ function StillCheckedInPrompt({
   );
 }
 
-/** The check-in machine stays usable while checked in, because that is when it asks the question. */
-export function Machines({ checkedIn }: { checkedIn: boolean }) {
+/**
+ * What the two machines do, shared by the 3D scene and the plain buttons.
+ * The check-in machine stays usable while checked in, because that is when it asks the question.
+ */
+export function useMachines(checkedIn: boolean) {
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -67,12 +71,32 @@ export function Machines({ checkedIn }: { checkedIn: boolean }) {
       setAsking(stillCheckedIn);
     });
 
-  const checkOut = () =>
+  const checkOut = () => {
+    // The 3D machine can be walked to at any time, so it explains rather than doing nothing.
+    if (!checkedIn) {
+      setError(NOT_CHECKED_IN);
+      return;
+    }
     run(async () => {
       await checkOutAction();
       setAsking(false);
     });
+  };
 
+  const messages = (
+    <>
+      <FormError message={error} />
+      {asking && (
+        <StillCheckedInPrompt pending={pending} onYes={checkOut} onNo={() => setAsking(false)} />
+      )}
+    </>
+  );
+  return { checkIn, checkOut, pending, messages };
+}
+
+/** Plain buttons for the machines, for browsers that cannot show the 3D office. */
+export function Machines({ checkedIn }: { checkedIn: boolean }) {
+  const { checkIn, checkOut, pending, messages } = useMachines(checkedIn);
   return (
     <>
       <div className="flex flex-wrap justify-center gap-2">
@@ -88,10 +112,7 @@ export function Machines({ checkedIn }: { checkedIn: boolean }) {
           Use check-out machine
         </button>
       </div>
-      <FormError message={error} />
-      {asking && (
-        <StillCheckedInPrompt pending={pending} onYes={checkOut} onNo={() => setAsking(false)} />
-      )}
+      {messages}
     </>
   );
 }
