@@ -19,6 +19,7 @@
 - `src/db/schema.ts`, `src/db/client.ts`, `src/db/migrations/`: tables, typed queries, dated migrations
 - `src/server/`: login setup and account rules (`session.ts` has `requireUser` and `requireAdmin`)
 - `src/ui/`: shared form parts
+- `src/world/`: the 3D office. `layout.ts` places everything on a grid of one-metre cells, `path.ts` finds walks, and each 3D object has its own small component. The floor data comes from `src/server/floor.ts`, which checks the gate itself
 - `tests/`: Vitest tests
 - `docs/`: plan, handoff, decisions, AI usage and session log
 - `.github/workflows/ci.yml`: CI, with a real Postgres service
