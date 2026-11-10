@@ -20,6 +20,7 @@ One line per decision: what, why (where a reason was given), who decided, date.
 - A project's owner can edit its title and description. Owner, 2026-11-10.
 - Once a task is accepted, the sender is only credited on the project and has no control over it. Owner, 2026-11-10.
 - A project ends with one Finish button, and the owner can reopen it. Owner, 2026-11-10.
+- The lobby, floor and offices are one connected world you walk through, rather than separate screens. The camera glides closer when you enter an office. Owner, 2026-11-10.
 
 ## Approved defaults
 
@@ -71,3 +72,13 @@ Chosen by Claude while building PR 3, 2026-11-10.
 - The "Send to" list shows names only, so email addresses stay visible only to admins.
 - A finished project cannot be edited until it is reopened.
 - Each list shows at most 200 records. Active projects are listed first, so the limit can only hide old finished ones.
+
+Chosen by Claude while building PR 4, 2026-11-10.
+
+- The server sends the floor (names, offices, cubicle seats) only to people who are checked in. Before that, the browser gets the lobby and nothing else.
+- Offices are ordered by name, in up to 4 columns, with each door facing the lobby. The floor shows at most 200 offices.
+- Name plates and signs are drawn inside the 3D scene with the browser's own font. Signs laid over the page as HTML crashed when leaving the page, and this also avoids loading fonts from other sites.
+- The menu over the scene keeps "Go to check-in machine" and "Go to check-out machine" buttons, which walk the character there. This keeps the machines usable from a keyboard.
+- Browsers that cannot draw 3D get the machines as plain buttons, until the "who's working" list arrives in PR 5.
+- Your position is not saved. Reloading the page starts you in the lobby. Saving positions belongs with presence in PR 5.
+- Cubicles show no project names yet. The details panel and labels come in PR 5.

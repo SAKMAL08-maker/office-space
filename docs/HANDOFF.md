@@ -2,9 +2,11 @@
 
 ## Where things stand
 
-PRs 0 to 3 are merged and live at https://office-space-tawny.vercel.app: Foundation (#1), Accounts (#3), Attendance (#6, plus the check-out machine, #7) and Work items (#9, merge `e2fa411`). All three migrations are applied to Neon through the Migrate production workflow.
+PRs 0 to 3 are merged and live at https://office-space-tawny.vercel.app: Foundation (#1), Accounts (#3), Attendance (#6, plus the check-out machine, #7) and Work items (#9, merge `e2fa411`), plus the PR 3 wrap-up docs (#10). All three migrations are applied to Neon through the Migrate production workflow.
 
-People can log in, check in and out, and read their time log. Once checked in, they can send tasks (Sent tasks), accept or reject them (Inbox, with a count on the home page), and create, edit, finish and reopen projects (My projects). Admins also have Everyone's time log and People. Until PR 4 adds the 3D lobby, buttons on the home page stand in for the machines.
+People can log in, check in and out, and read their time log. Once checked in, they can send tasks (Sent tasks), accept or reject them (Inbox, with a count on the home page), and create, edit, finish and reopen projects (My projects). Admins also have Everyone's time log and People.
+
+**PR 4 (3D world) is open on `feat/3d-world`, not merged.** The home page becomes a 3D office: a lobby with the two machines and a gate, then a floor of offices (one per person, name plate over the door) with one cubicle per active project, placed by `seat`. You click the floor to walk, and clicking a machine walks you there and uses it. The floor data comes from `getFloor()` in `src/server/floor.ts`, which calls `requireCheckedIn()` itself. Browsers without 3D get the old buttons.
 
 **How tasks work (owner's correction):** a task is a project offered to someone. It becomes their project, with one cubicle, only if they accept it. Tasks never sit inside projects. At most 10 can be waiting from one sender to one receiver.
 
@@ -12,24 +14,26 @@ People can log in, check in and out, and read their time log. Once checked in, t
 
 ## In progress
 
-Only this wrap-up docs PR. Nothing is half-built.
+PR 4 is waiting for the owner's review and "merge it". It has no migration. Nothing is half-built.
 
 ## Next steps
 
-1. Owner tries PR 3 live with two people: check in, send a task, accept it, and see the project in My projects. Also try both machines and My time log, which is not confirmed live either.
-2. Start PR 4 (3D world): lobby, machines, floor, offices, click-to-walk. See `docs/PLAN.md`. Cubicles have a `seat` number per office for the scene to use.
-3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
-4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
+1. Owner reviews PR 4, ideally on its Vercel preview (it is logged out there, so mostly a look at the login page) and after merging on the live site, with two people.
+2. Owner tries PR 3 live with two people: check in, send a task, accept it, and see the project in My projects. Also try both machines and My time log, which is not confirmed live either.
+3. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler.
+4. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
+5. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
 
 ## Open decisions (owner)
 
-- Whether to delete the 9 merged branches (all fully in `main`). Claude explained it is safe with `git branch -d`; the owner has not said yes yet.
+- Whether to delete the 10 merged branches (all fully in `main`). Claude explained it is safe with `git branch -d`; the owner has not said yes yet.
 - At PR 6: whether preview deployments get their own Neon database. Until then, leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
 - Whether the check-out machine should ask for confirmation, and whether admins can correct a logged time. Neither is built.
 
 ## Verified vs. not
 
-- Tested: 76 Vitest tests in 7 files, locally on a throwaway Postgres 18 and in CI. Two-person headless browser walk-throughs on a local production build at 1280px and 390px wide, covering accounts, both machines, time logs, and all of PR 3 (gate, limit of 10, cancel, accept, reject, edit, finish, reopen).
+- Tested: 92 Vitest tests in 9 files, locally on a throwaway Postgres. Two-person headless browser walk-throughs on a local production build at 1280px and 390px wide, covering accounts, both machines, time logs, and all of PR 3 (gate, limit of 10, cancel, accept, reject, edit, finish, reopen).
+- PR 4 tested locally: layout, route finder, walking and the floor gate in Vitest. A headless Edge walk-through on a local production build (software 3D) at 1280px and 390px: lobby, no office names in the page before check-in, walking to each machine checks in and out, the floor opening, cubicles, walking into an office, a link away and back, the "still not checked out" question, and the plain-button fallback with 3D switched off. Screenshots were checked by eye. Not verified: real phones and touch, real graphics cards, or many offices at once.
 - Tested live: all migration runs succeeded. After the PR 3 deploy, `/api/health` returned 200 and the new pages loaded.
 - Not verified: using any feature while logged in on the live site. A direct query of the live tables, because Claude does not hold the database address. Invite and reset links live. Preview deployments reaching a database.
 
@@ -44,3 +48,6 @@ Only this wrap-up docs PR. Nothing is half-built.
 - `vercel link` writes a token to `.env.local` and breaks `.gitignore`; if relinked, delete that file and run `git restore .gitignore`. Never run `vercel env pull`. Vercel setting changes need a redeploy and the owner's yes.
 - Secrets go in a separate PowerShell window, never through `!`. The account tests empty every table, so they only run on a database whose name ends in `_test`.
 - Attendance never closes by itself. The login limit is per server instance until PR 7. Vercel's free plan excludes commercial use.
+- 3D: headless Edge draws the scene only with `--use-angle=swiftshader --enable-unsafe-swiftshader`. Signs in the scene are pictures, not page text, so a browser test cannot find their words; check the menu text or the page data instead. Avoid HTML laid over the canvas (drei `Html`): it crashed when leaving the page.
+- 3D: the React lint rules forbid changing state or props, so the walker lives in a ref and is moved inside `useFrame`. Walking never re-renders React.
+- 3D: the menu sits over the top of the scene, so clicks there never reach the floor. On a phone it covers about a quarter of the screen.

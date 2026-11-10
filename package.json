@@ -15,13 +15,15 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@react-three/fiber": "9.8.2",
     "@vercel/functions": "^3.11.0",
     "better-auth": "^1.7.18",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.5",
     "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -29,6 +31,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "0.187.0",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
