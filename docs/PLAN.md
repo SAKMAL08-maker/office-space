@@ -13,7 +13,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 0   | Foundation    | Done        |
 | 1   | Accounts      | Done        |
 | 2   | Attendance    | Done        |
-| 3   | Work items    | In review   |
+| 3   | Work items    | Done        |
 | 4   | 3D world      | Not started |
 | 5   | Cubicles live | Not started |
 | 6   | Backblaze     | Not started |
