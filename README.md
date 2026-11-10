@@ -1,6 +1,6 @@
 # Office Space
 
-A 3D digital office that shows who is working on what. Each person has a named office, each project or approved task is a cubicle, and a check-in machine records time at work.
+A 3D digital office that shows who is working on what. Each person has a named office, each project is a cubicle, and a check-in machine records time at work.
 
 Status: accounts are built (login, invites, password reset links). See [docs/PLAN.md](docs/PLAN.md) for the build order.
 

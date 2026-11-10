@@ -2,7 +2,7 @@
 
 ## Context
 
-The owner wants a web app that shows who is working on what, presented as a walkable 3D office seen from an angled top-down camera. Each user has a named office. Each office holds cubicles for that person's projects and approved tasks. Anyone checked in can look inside a cubicle, and an occupied cubicle is obvious at a glance. A check-in machine and a check-out machine are the only way in and out, and they produce each user's time log.
+The owner wants a web app that shows who is working on what, presented as a walkable 3D office seen from an angled top-down camera. Each user has a named office. Each office holds one cubicle for each of that person's active projects. Anyone checked in can look inside a cubicle, and an occupied cubicle is obvious at a glance. A check-in machine and a check-out machine are the only way in and out, and they produce each user's time log.
 
 The project folder is empty, so this is a new build. Node 24, git and GitHub CLI (account `SAKMAL08-maker`) are ready. Vercel CLI runs through `npx`.
 
@@ -13,7 +13,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 0   | Foundation    | Done        |
 | 1   | Accounts      | Done        |
 | 2   | Attendance    | Done        |
-| 3   | Work items    | Not started |
+| 3   | Work items    | In review   |
 | 4   | 3D world      | Not started |
 | 5   | Cubicles live | Not started |
 | 6   | Backblaze     | Not started |
@@ -21,13 +21,13 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 
 ## Owner decisions so far
 
-| Topic     | Decision                                                                                                                                 |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Accounts  | Invite only, email + password                                                                                                            |
-| Movement  | Click to walk; other workers update every few seconds                                                                                    |
-| Backblaze | Task/project attachments, profile pictures, time log exports                                                                             |
-| Cubicles  | One per project the user created, one per task assigned to them                                                                          |
-| Assigning | Anyone can assign any number of tasks to anyone. **The assignee must approve before a cubicle appears.** Declined tasks never create one |
+| Topic     | Decision                                                                                                                                                                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accounts  | Invite only, email + password                                                                                                                                                                                                                     |
+| Movement  | Click to walk; other workers update every few seconds                                                                                                                                                                                             |
+| Backblaze | Task/project attachments, profile pictures, time log exports                                                                                                                                                                                      |
+| Cubicles  | One per active project, whether the user created it or accepted it as a task                                                                                                                                                                      |
+| Tasks     | A task is a project offered to someone. Anyone can send one to anyone else. **It only becomes a project, with a cubicle, if the receiver accepts it.** Rejected tasks never create one. At most 10 can be waiting from one sender to one receiver |
 
 ## Stack
 
@@ -45,22 +45,26 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 1. Log in, and you land in the lobby. Only the check-in machine works.
 2. Click the check-in machine: your character walks over and checks in. An attendance record opens and the office floor unlocks.
 3. The floor is a grid of offices with name plates. Click a door to enter. Click a cubicle to walk there and open its details panel.
-4. In your own office, press **Start working here**. Your character sits down and the time starts counting against that project or task. Starting elsewhere ends the previous one automatically.
+4. In your own office, press **Start working here**. Your character sits down and the time starts counting against that project. Starting elsewhere ends the previous one automatically.
 5. To leave, walk to the check-out machine and check out. This closes the work and attendance records. Log out is only offered after checking out. Using the check-in machine while still checked in asks "You are still not checked out, would you like to?" with Yes and No. Yes logs the check-out time. No leaves the record open.
 
 **Occupied cubicle indicator:** character seated, screen lit, coloured glow on the cubicle, floating label with name and project. The office door also shows a "working" badge, so you can spot it from the floor view.
 
-**Task approval**
+**Tasks and projects**
 
-- Assigned task → status `pending` → appears in the assignee's inbox (HUD badge plus an in-tray object in their office).
-- Approve → the status change and new cubicle are saved together in one database transaction. Decline → no cubicle, and the assigner sees the decline with an optional reason.
-- Tasks you assign to yourself are approved automatically. The assigner can cancel while still pending.
-- A task in a project the assignee already owns sits inside that project's cubicle rather than adding a second one.
+A task is a project offered to someone. It is called a task until the receiver accepts it, and then it becomes their project.
+
+- Sent task → status `pending` → appears in the receiver's inbox (a count on the home page, later a HUD badge plus an in-tray object in their office). At most 10 can be waiting from one sender to one receiver.
+- Accept → the status change, the new project and its cubicle are saved together in one database transaction. Reject → nothing is created, and the sender sees the rejection with an optional reason.
+- The sender can cancel while the task is waiting. After acceptance the project belongs to the receiver, and the sender is only credited ("sent by").
+- You cannot send a task to yourself. To work on something yourself, create a project.
+- A project's owner can edit its title and description while it is active. The task record keeps the original wording.
+- Finish removes the cubicle and keeps the project. Reopen gives it the owner's lowest free seat.
 
 **Data tables**
-`users`, auth tables, `invites`, `projects`, `tasks` (with `approval_status`), `cubicles` (owner, project or task, fixed seat number), `attendance_sessions`, `work_sessions`, `attachments`, `time_exports`.
+`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `attachments`, `time_exports`.
 
-Database rules enforce the key facts: one open attendance per user, one open work session per user, one cubicle per project or task.
+Database rules enforce the key facts: one open attendance per user, one open work session per user, one cubicle per project, one project per task, no seat shared within an office.
 
 **Security rule:** the check-in gate lives on the server (`requireCheckedIn()`, used by every office API). Hiding buttons alone wouldn't stop anyone.
 
@@ -107,7 +111,7 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 
 1. **Forgot to check out / closed the tab:** after 2 minutes of silence the character shows "away". Attendance keeps running until the person checks out (owner's change, replacing an automatic close after 2 hours). The check-in machine reminds them, as in step 5 of the journey.
 2. **Time log visibility:** you see your own; admins see everyone's and can export them.
-3. **Finished work:** marking a task done or archiving a project removes its cubicle. History stays in the time log.
+3. **Finished work:** finishing a project removes its cubicle, and the owner can reopen it (owner's change). History stays in the time log.
 4. **Who can start work:** only the cubicle's owner. Everyone else can look only.
 5. **Repo:** private, named `office-space`.
 6. **Added by me:** a plain "who's working on what" list, for phones, keyboard users and devices that can't run 3D.
@@ -123,8 +127,8 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 ## Verification
 
 - **Each PR:** lint, format check, unit tests and build all pass in CI against a real Postgres database.
-- **Unit tests:** double check-in blocked, gate refuses unchecked-in users, approve creates exactly one cubicle, decline creates none, switching cubicles closes the earlier session, attendance stays open until the person checks out.
-- **Browser tests:** two users. A checks in, assigns a task to B, B approves, the cubicle appears, B starts work, A sees the indicator within one update, B checks out, and the time log shows correct durations.
+- **Unit tests:** double check-in blocked, gate refuses unchecked-in users, accept creates exactly one project and cubicle, reject creates none, switching cubicles closes the earlier session, attendance stays open until the person checks out.
+- **Browser tests:** two users. A checks in, sends a task to B, B accepts, the cubicle appears, B starts work, A sees the indicator within one update, B checks out, and the time log shows correct durations.
 - **Backblaze:** real upload and download on a preview deployment, and confirm an expired link fails.
 - **By eye:** render the 3D scenes at desktop and phone widths and look at them before calling any UI PR done.
 - Each report will say plainly what was tested, what used mock data and what wasn't verified.

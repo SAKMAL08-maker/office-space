@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getOpenAttendance } from "@/server/attendance";
 import { requireUser } from "@/server/session";
+import { countInbox } from "@/server/tasks";
 import { Loading, quietButtonClass } from "@/ui/form-parts";
 import { LocalTime } from "@/ui/local-time";
 import { Machines } from "./machines";
@@ -24,6 +25,19 @@ async function Welcome() {
       </p>
       <Machines checkedIn={open !== null} />
       <div className="flex flex-wrap justify-center gap-2">
+        {open && (
+          <>
+            <Link href="/projects" className={quietButtonClass}>
+              My projects
+            </Link>
+            <Link href="/inbox" className={quietButtonClass}>
+              Inbox ({await countInbox(user.id)})
+            </Link>
+            <Link href="/sent" className={quietButtonClass}>
+              Sent tasks
+            </Link>
+          </>
+        )}
         <Link href="/time-log" className={quietButtonClass}>
           My time log
         </Link>

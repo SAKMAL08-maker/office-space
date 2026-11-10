@@ -7,13 +7,19 @@ One line per decision: what, why (where a reason was given), who decided, date.
 - Accounts are invite only, with email and password, so that only the team can access the app and to avoid tanking or bombing it. Owner, 2026-11-10.
 - People click to walk, and other workers update every few seconds. Owner, 2026-11-10.
 - Backblaze stores task and project attachments, profile pictures and time log exports. Owner, 2026-11-10.
-- There is one cubicle per project a user created and one per task assigned to them. Owner, 2026-11-10.
-- Anyone can assign any number of tasks to anyone, and the assignee must approve before a cubicle appears. The assignee has the power to accept or reject assigned tasks, to avoid malicious or unnecessary tasks in their room and to choose whether they want the task. Owner, 2026-11-10.
+- There is one cubicle per project a user created and one per task assigned to them. Owner, 2026-11-10. The owner has since clarified this (see the task decision below).
+- Anyone can assign any number of tasks to anyone, and the assignee must approve before a cubicle appears. The assignee has the power to accept or reject assigned tasks, to avoid malicious or unnecessary tasks in their room and to choose whether they want the task. Owner, 2026-11-10. The number is now limited (see below).
 - PR 7 adds protection against floods of traffic. Owner, 2026-11-10.
 - The app uses Vercel's free plan. Owner, 2026-11-10.
 - Preview deployments stay logged out until PR 6, when giving them their own database is decided. Owner, 2026-11-10.
 - Attendance never closes by itself. It keeps running until the person checks out, even if they close the tab or keep it in the background. If they forget, using the check-in machine asks "You are still not checked out, would you like to?" with Yes and No, and Yes logs the check-out time. This replaces the 2-hour automatic close approved with the plan. Owner, 2026-11-10.
 - There is a separate check-out machine next to the check-in machine. Owner, 2026-11-10.
+- Tasks are projects being given to users. It is called a task until accepted, then it is turned into a project. Anyone can send tasks to anyone, and the receiver has the power to accept or reject. So every cubicle belongs to a project, and tasks never sit inside projects. Owner, 2026-11-10.
+- At most 10 tasks can be waiting from one sender to one receiver. Answering or cancelling one frees a slot. Owner, 2026-11-10.
+- Tasks and projects have a title and an optional description. Owner, 2026-11-10.
+- A project's owner can edit its title and description. Owner, 2026-11-10.
+- Once a task is accepted, the sender is only credited on the project and has no control over it. Owner, 2026-11-10.
+- A project ends with one Finish button, and the owner can reopen it. Owner, 2026-11-10.
 
 ## Approved defaults
 
@@ -21,7 +27,7 @@ Proposed by Claude and approved by the owner with the plan, 2026-11-10.
 
 - A silent user shows as away after 2 minutes. An automatic close after 2 hours was also approved here, and the owner has since replaced it (see Product).
 - Users see their own time log. Admins see everyone's and can export them.
-- A finished task or archived project loses its cubicle, and its history stays in the time log.
+- A finished task or archived project loses its cubicle, and its history stays in the time log. The owner has since replaced tasks and archiving here with Finish and Reopen on projects (see Product).
 - Only a cubicle's owner can start work there.
 - A plain list of who is working on what backs up the 3D view, for phones, keyboard users and devices that cannot run 3D.
 
@@ -51,3 +57,17 @@ Chosen by Claude while building PR 2, 2026-11-10.
 - Time log pages do not need a check-in, so people can read their hours after checking out.
 - Time log pages show the newest 200 records. Exports in PR 6 cover the full history.
 - The database refuses to delete a person who has attendance records, so hours cannot vanish by accident.
+
+Proposed by Claude in the PR 3 plan, with no objection from the owner, 2026-11-10.
+
+- Finishing a project deletes its cubicle row and keeps the project. Reopening gives it the owner's lowest free seat, which may not be its old one.
+- People see only their own tasks and projects until PR 5.
+- Titles can be up to 120 characters, descriptions 2,000 and reject reasons 500.
+
+Chosen by Claude while building PR 3, 2026-11-10.
+
+- Every Projects, Inbox and Sent page and action needs a check-in, not only the actions.
+- A task cannot be sent to yourself. Creating a project does the same job.
+- The "Send to" list shows names only, so email addresses stay visible only to admins.
+- A finished project cannot be edited until it is reopened.
+- Each list shows at most 200 records. Active projects are listed first, so the limit can only hide old finished ones.
