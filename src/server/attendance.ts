@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { attendanceSessions, users } from "@/db/schema";
+import { lockUser } from "./users";
 import type { Result } from "./validation";
+import { endOpenWork } from "./work";
 
 const TIME_LOG_LIMIT = 200;
 
@@ -34,15 +36,22 @@ export async function checkIn(userId: string): Promise<Result> {
   return { ok: true };
 }
 
-/** Closes the open record, using the database clock so the time cannot come before check-in. */
-export async function checkOut(userId: string): Promise<Result> {
-  const closed = await getDb()
-    .update(attendanceSessions)
-    .set({ checkedOutAt: sql`now()` })
-    .where(and(eq(attendanceSessions.userId, userId), isOpen))
-    .returning({ id: attendanceSessions.id });
-  if (closed.length === 0) return { ok: false, error: "You are not checked in." };
-  return { ok: true };
+/**
+ * Closes the open record and any open work period together, using the database clock so the time
+ * cannot come before check-in. The person's lock stops a start of work slipping in alongside.
+ */
+export function checkOut(userId: string): Promise<Result> {
+  return getDb().transaction(async (tx): Promise<Result> => {
+    await lockUser(tx, userId);
+    await endOpenWork(tx, userId);
+    const closed = await tx
+      .update(attendanceSessions)
+      .set({ checkedOutAt: sql`now()` })
+      .where(and(eq(attendanceSessions.userId, userId), isOpen))
+      .returning({ id: attendanceSessions.id });
+    if (closed.length === 0) return { ok: false, error: "You are not checked in." };
+    return { ok: true };
+  });
 }
 
 export function listTimeLog(userId: string) {

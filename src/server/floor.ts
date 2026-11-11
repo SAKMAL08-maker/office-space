@@ -1,16 +1,20 @@
-import { asc } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "@/db/client";
-import { cubicles, users } from "@/db/schema";
+import { cubicles, projects, tasks, users, workSessions } from "@/db/schema";
+import type { CubicleInfo, OfficeInfo } from "@/world/layout";
 import { requireCheckedIn } from "./session";
 
 const OFFICE_LIMIT = 200;
 
-export type FloorOffice = { ownerId: string; name: string; seats: number[] };
+export type FloorOffice = OfficeInfo;
+
+const senders = alias(users, "senders");
 
 /**
- * Everyone's office and the seats of its cubicles, for the 3D floor.
- * It checks the gate itself, so the floor never reaches anyone who is not checked in,
- * whichever page asks for it.
+ * Everyone's office and its cubicles, with each project's details and who is working there,
+ * for the 3D floor. It checks the gate itself, so the floor never reaches anyone who is not
+ * checked in, whichever page asks for it.
  */
 export async function getFloor(): Promise<{ viewerId: string; offices: FloorOffice[] }> {
   const viewer = await requireCheckedIn();
@@ -21,22 +25,37 @@ export async function getFloor(): Promise<{ viewerId: string; offices: FloorOffi
     .orderBy(asc(users.name), asc(users.id))
     .limit(OFFICE_LIMIT);
   const taken = await db
-    .select({ ownerId: cubicles.ownerId, seat: cubicles.seat })
+    .select({
+      ownerId: cubicles.ownerId,
+      seat: cubicles.seat,
+      projectId: projects.id,
+      title: projects.title,
+      description: projects.description,
+      sentBy: senders.name,
+      workingSince: workSessions.startedAt,
+    })
     .from(cubicles)
+    .innerJoin(projects, eq(projects.id, cubicles.projectId))
+    .leftJoin(tasks, eq(tasks.id, projects.sourceTaskId))
+    .leftJoin(senders, eq(senders.id, tasks.senderId))
+    .leftJoin(
+      workSessions,
+      and(eq(workSessions.projectId, projects.id), isNull(workSessions.endedAt)),
+    )
     .orderBy(asc(cubicles.seat));
 
-  const seatsByOwner = new Map<string, number[]>();
-  for (const { ownerId, seat } of taken) {
-    const seats = seatsByOwner.get(ownerId) ?? [];
-    seats.push(seat);
-    seatsByOwner.set(ownerId, seats);
+  const cubiclesByOwner = new Map<string, CubicleInfo[]>();
+  for (const { ownerId, ...cubicle } of taken) {
+    const list = cubiclesByOwner.get(ownerId) ?? [];
+    list.push(cubicle);
+    cubiclesByOwner.set(ownerId, list);
   }
   return {
     viewerId: viewer.id,
     offices: people.map(({ id, name }) => ({
       ownerId: id,
       name,
-      seats: seatsByOwner.get(id) ?? [],
+      cubicles: cubiclesByOwner.get(id) ?? [],
     })),
   };
 }

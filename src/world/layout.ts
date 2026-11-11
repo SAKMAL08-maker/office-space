@@ -11,6 +11,25 @@ export type Rect = { x: number; z: number; w: number; d: number };
 
 export type OfficeInput = { ownerId: string; name: string; seats: number[] };
 
+/** What a cubicle shows: its project, and since when its owner has been working there, if they are. */
+export type CubicleInfo = {
+  seat: number;
+  projectId: string;
+  title: string;
+  description: string;
+  sentBy: string | null;
+  workingSince: Date | null;
+};
+
+/** One office as the server sends it: its owner and the cubicles of their active projects. */
+export type OfficeInfo = { ownerId: string; name: string; cubicles: CubicleInfo[] };
+
+export const toOfficeInput = ({ ownerId, name, cubicles }: OfficeInfo): OfficeInput => ({
+  ownerId,
+  name,
+  seats: cubicles.map((cubicle) => cubicle.seat),
+});
+
 export type CubicleLayout = { seat: number; desk: Rect; spot: Cell };
 
 export type OfficeLayout = {

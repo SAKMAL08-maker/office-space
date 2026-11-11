@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { getDb, type Tx } from "@/db/client";
-import { cubicles, projects, tasks, users } from "@/db/schema";
+import { cubicles, projects, tasks, users, workSessions } from "@/db/schema";
 import { lockUser } from "./users";
 import { type Result, workDetailsProblem } from "./validation";
+import { endProjectWork } from "./work";
 
 const PROJECT_LIST_LIMIT = 200;
 const NOT_ACTIVE = "This project is not active any more.";
@@ -78,7 +79,10 @@ export function finishProject(ownerId: string, projectId: string): Promise<Resul
       .returning({ id: projects.id });
     if (finished.length === 0) return { ok: false, error: NOT_ACTIVE };
 
+    // The cubicle goes first: its lock makes a start of work that is under way finish before this
+    // ends the period, so no period is left open on a finished project.
     await tx.delete(cubicles).where(eq(cubicles.projectId, projectId));
+    await endProjectWork(tx, projectId);
     return { ok: true };
   });
 }
@@ -107,9 +111,14 @@ export function listProjects(ownerId: string) {
       finishedAt: projects.finishedAt,
       seat: cubicles.seat,
       sentBy: users.name,
+      workingSince: workSessions.startedAt,
     })
     .from(projects)
     .leftJoin(cubicles, eq(cubicles.projectId, projects.id))
+    .leftJoin(
+      workSessions,
+      and(eq(workSessions.projectId, projects.id), isNull(workSessions.endedAt)),
+    )
     .leftJoin(tasks, eq(tasks.id, projects.sourceTaskId))
     .leftJoin(users, eq(users.id, tasks.senderId))
     .where(eq(projects.ownerId, ownerId))

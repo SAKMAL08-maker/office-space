@@ -74,7 +74,7 @@ describe.skipIf(!canUseDatabase)("getFloor", () => {
     await expect(getFloor()).rejects.toMatchObject({ digest: expect.stringContaining(";/;") });
   });
 
-  it("lists everyone's office by name, with the seats of their active projects", async () => {
+  it("lists everyone's office by name, with the cubicles of their active projects", async () => {
     await logInAsMember();
     await checkIn(memberId);
     const project = { title: "Lobby", description: "Draw it" };
@@ -86,9 +86,17 @@ describe.skipIf(!canUseDatabase)("getFloor", () => {
 
     const floor = await getFloor();
     expect(floor.viewerId).toBe(memberId);
+    const cubicle = (seat: number, title: string) => ({
+      seat,
+      projectId: expect.any(String),
+      title,
+      description: "Draw it",
+      sentBy: null,
+      workingSince: null,
+    });
     expect(floor.offices).toEqual([
-      { ownerId: memberId, name: "Mo", seats: [] },
-      { ownerId: adminId, name: "Zoe", seats: [1, 3] },
+      { ownerId: memberId, name: "Mo", cubicles: [] },
+      { ownerId: adminId, name: "Zoe", cubicles: [cubicle(1, "Lobby"), cubicle(3, "Doors")] },
     ]);
   });
 });
