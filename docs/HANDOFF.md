@@ -16,12 +16,12 @@ People can log in, check in and out, send, accept and reject tasks, and manage p
 
 ## Next steps
 
-1. **Owner: Backblaze setup** (keys never go in the chat):
+1. **Owner: Backblaze setup** — done 2026-11-11 (bucket, key, Vercel and `.env.local` settings, CORS rule). Kept for reference; keys never go in the chat:
    1. Create a **private** bucket. In its Lifecycle settings, choose "Keep only the last version", so removed files really go.
    2. Create an application key limited to that bucket, with read and write access.
    3. Type `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET` and `B2_ENDPOINT` (the bucket's S3 endpoint, with `https://` in front) into Vercel (Production) and into your own `.env.local`.
    4. Run `! node --env-file=.env.local scripts/set-bucket-cors.mjs https://office-space-tawny.vercel.app http://localhost:3000`. If Backblaze says AccessDenied, the key may not change bucket settings: make a temporary key that can, run it once with that, then delete the temporary key.
-2. Claude tests a real upload and download from a local server against the bucket, and checks an expired link fails.
+2. Real local test against the bucket — done, see Verified.
 3. Owner reads the migration SQL; on a yes, the owner runs `! gh workflow run migrate.yml --ref feat/project-attachments`, Claude checks the run, then merges on "merge it". The migration must run **before** the merge: the new code reads the new table.
 4. After the merge: one live upload and download.
 5. Then 6b profile pictures, 6c CSV export. Later: Playwright in the repo with the first committed browser test.
@@ -38,7 +38,7 @@ People can log in, check in and out, send, accept and reject tasks, and manage p
 
 ## Verified vs. not
 
-- PR 6a, tested: 147 Vitest tests in 15 files, run locally against a throwaway Postgres (bucket replaced by a pretend one in the tests), plus lint, format, typecheck and build. Rendered with throwaway data and fake keys (headless Edge): My projects and Sent at 1280px and 390px; the download address answered 302 to a 5-minute link that forces download, 404 for an unknown file; the upload sent exactly the signed headers. The fake-key upload and size check reached real Backblaze and were refused (403), as expected. **Not verified yet: any real upload or download, the CORS rule, and an expired link.**
+- PR 6a, tested: 147 Vitest tests in 15 files, run locally against a throwaway Postgres (bucket replaced by a pretend one in the tests), plus lint, format, typecheck and build. Rendered with throwaway data and fake keys (headless Edge): My projects and Sent at 1280px and 390px; the download address answered 302 to a 5-minute link that forces download, 404 for an unknown file; the upload sent exactly the signed headers. The fake-key upload and size check reached real Backblaze and were refused (403), as expected. Then, against the owner's real bucket from a local server (throwaway database, 2026-11-11), 11 checks passed: upload through the app marked ready (3.4 s for a small file), stored as download-only bytes, download returns the same bytes under the original name, a plain unsigned link is refused (401), an expired link is refused (401), a bigger-than-signed upload and a web-page-type upload are refused (403), the bucket allows the live site's address and refuses others, and Remove deletes the record and the stored file. **The first run stuck on "Uploading…" for over 20 seconds right after the CORS rule was saved; two later runs worked in a few seconds. Cause not found.** Not verified: the live site, a 25 MB file, a slow connection.
 - Before PR 6a: 125 Vitest tests in 13 files (CI on #19 and `main`, with Postgres; locally the 91 database tests skip), plus lint, format, typecheck and build. The new walkway tests fail with the old layout and pass with the fix.
 - Rendered with throwaway data (headless Edge, software graphics): a 12-cubicle office at 1280px and 390px, and a walk from a back-row chair past a full row of desks; earlier, 5c's lobby, gate swing and phones, and 5b's two-person presence walk-through.
 - Live: deploy status, health and login after the merge; earlier migration runs.
