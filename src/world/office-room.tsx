@@ -35,10 +35,17 @@ export function OfficeRoom({
       <Ground
         rect={office.interior}
         color={mine ? colors.ownCarpet : colors.carpet}
+        pattern="carpet"
         height={0.01}
         onPick={onPick}
       />
-      <Ground rect={office.door} color={colors.officeFloor} height={0.01} onPick={onPick} />
+      <Ground
+        rect={office.door}
+        color={colors.officeFloor}
+        pattern="planks"
+        height={0.01}
+        onPick={onPick}
+      />
       {/* The lintel over the door carries the name plate, and clicking it walks inside. */}
       <mesh
         position={[door.x, WALL_HEIGHT + 0.1, door.z]}

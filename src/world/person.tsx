@@ -50,7 +50,7 @@ export function Person({ shirt, hair }: { shirt: string; hair: string }) {
       <Leg name="L" x={0.1} />
       <Leg name="R" x={-0.1} />
       {/* Body: a rounded shirt, flattened front to back. */}
-      <mesh position={[0, 0.84, 0]} scale={[1, 1, 0.62]}>
+      <mesh position={[0, 0.84, 0]} scale={[1, 1, 0.62]} castShadow>
         <capsuleGeometry args={[0.21, 0.3, 4, 12]} />
         <meshStandardMaterial color={shirt} />
       </mesh>
@@ -60,7 +60,7 @@ export function Person({ shirt, hair }: { shirt: string; hair: string }) {
         <cylinderGeometry args={[0.06, 0.07, 0.1, 10]} />
         <meshStandardMaterial color={colors.skin} />
       </mesh>
-      <mesh position={[0, 1.42, 0]}>
+      <mesh position={[0, 1.42, 0]} castShadow>
         <sphereGeometry args={[0.2, 18, 14]} />
         <meshStandardMaterial color={colors.skin} />
       </mesh>

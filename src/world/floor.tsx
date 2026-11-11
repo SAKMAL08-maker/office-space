@@ -26,7 +26,7 @@ export function Floor({
   const byOwner = new Map(offices.map((info) => [info.ownerId, info]));
   return (
     <group>
-      <Ground rect={layout.floor} color={colors.officeFloor} onPick={onPick} />
+      <Ground rect={layout.floor} color={colors.officeFloor} pattern="planks" onPick={onPick} />
       {layout.offices.map((office) => (
         <OfficeRoom
           key={office.ownerId}
