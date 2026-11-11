@@ -16,7 +16,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 3   | Work items | Done        |
 | 4   | 3D world   | Done        |
 | 5a  | Working    | Done        |
-| 5b  | Presence   | In review   |
+| 5b  | Presence   | Done        |
 | 6   | Backblaze  | Not started |
 | 7   | Hardening  | Not started |
 
