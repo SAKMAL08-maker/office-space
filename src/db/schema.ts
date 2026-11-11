@@ -287,3 +287,37 @@ export const presence = pgTable(
     ),
   ],
 );
+
+// A file attached to a project. The file itself lives in the private Backblaze bucket under
+// storage_key; this row says who may fetch it. A row stays "pending" until the server has seen
+// the uploaded file in the bucket at the promised size.
+
+export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+
+export const attachments = pgTable(
+  "attachments",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id),
+    uploaderId: text("uploader_id")
+      .notNull()
+      .references(() => users.id),
+    fileName: text("file_name").notNull(),
+    size: integer("size").notNull(),
+    storageKey: text("storage_key").notNull().unique(),
+    status: text("status", { enum: ["pending", "ready"] })
+      .notNull()
+      .default("pending"),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    check("attachments_status_check", sql`${table.status} in ('pending', 'ready')`),
+    check(
+      "attachments_size_check",
+      sql`${table.size} between 1 and ${sql.raw(String(MAX_ATTACHMENT_BYTES))}`,
+    ),
+    index("attachments_project_created_idx").on(table.projectId, table.createdAt),
+  ],
+);

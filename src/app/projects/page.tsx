@@ -1,3 +1,4 @@
+import { filesByProject, type ListedFile } from "@/server/attachments";
 import { listProjects } from "@/server/projects";
 import { requireCheckedIn } from "@/server/session";
 import { ActionButton } from "@/ui/action-button";
@@ -5,13 +6,14 @@ import { cardClass, mutedTextClass } from "@/ui/form-parts";
 import { LocalTime } from "@/ui/local-time";
 import { WorkDetails, WorkPage } from "@/ui/work-page";
 import { startWorkAction, stopWorkAction } from "../actions";
+import { FileList } from "../attachments/file-list";
 import { finishProjectAction, reopenProjectAction } from "./actions";
 import { EditProjectForm } from "./edit-project-form";
 import { NewProjectForm } from "./new-project-form";
 
 type Project = Awaited<ReturnType<typeof listProjects>>[number];
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({ project, files }: { project: Project; files: ListedFile[] }) {
   const { id, title, description, finishedAt, seat, sentBy, workingSince } = project;
   return (
     <li className={cardClass}>
@@ -31,6 +33,7 @@ function ProjectCard({ project }: { project: Project }) {
           Working here since <LocalTime value={workingSince} />
         </p>
       )}
+      <FileList projectId={id} files={files} canUpload={!finishedAt} />
       {finishedAt ? (
         <div>
           <ActionButton action={reopenProjectAction} id={id} label="Reopen" />
@@ -50,7 +53,15 @@ function ProjectCard({ project }: { project: Project }) {
   );
 }
 
-function ProjectList({ heading, projects }: { heading: string; projects: Project[] }) {
+function ProjectList({
+  heading,
+  projects,
+  files,
+}: {
+  heading: string;
+  projects: Project[];
+  files: Map<string, ListedFile[]>;
+}) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">
@@ -58,7 +69,7 @@ function ProjectList({ heading, projects }: { heading: string; projects: Project
       </h2>
       <ul className="flex flex-col gap-2">
         {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+          <ProjectCard key={project.id} project={project} files={files.get(project.id) ?? []} />
         ))}
       </ul>
     </section>
@@ -68,6 +79,10 @@ function ProjectList({ heading, projects }: { heading: string; projects: Project
 async function ProjectsContent() {
   const user = await requireCheckedIn();
   const projects = await listProjects(user.id);
+  const files = await filesByProject(
+    user.id,
+    projects.map((project) => project.id),
+  );
 
   return (
     <>
@@ -75,8 +90,16 @@ async function ProjectsContent() {
         <h2 className="text-lg font-semibold">New project</h2>
         <NewProjectForm />
       </section>
-      <ProjectList heading="Active" projects={projects.filter((p) => !p.finishedAt)} />
-      <ProjectList heading="Finished" projects={projects.filter((p) => p.finishedAt)} />
+      <ProjectList
+        heading="Active"
+        projects={projects.filter((p) => !p.finishedAt)}
+        files={files}
+      />
+      <ProjectList
+        heading="Finished"
+        projects={projects.filter((p) => p.finishedAt)}
+        files={files}
+      />
     </>
   );
 }

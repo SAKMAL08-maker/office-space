@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { tasks, users } from "@/db/schema";
+import { projects, tasks, users } from "@/db/schema";
 import { insertProjectWithCubicle } from "./projects";
 import { lockUser } from "./users";
 import { MAX_REJECT_REASON_LENGTH, type Result, workDetailsProblem } from "./validation";
@@ -136,9 +136,13 @@ export function listSent(senderId: string) {
       rejectReason: tasks.rejectReason,
       createdAt: tasks.createdAt,
       sentTo: users.name,
+      // Set once the task is accepted: the sender can then share files on the project.
+      projectId: projects.id,
+      projectFinishedAt: projects.finishedAt,
     })
     .from(tasks)
     .innerJoin(users, eq(users.id, tasks.receiverId))
+    .leftJoin(projects, eq(projects.sourceTaskId, tasks.id))
     .where(eq(tasks.senderId, senderId))
     .orderBy(desc(tasks.createdAt))
     .limit(TASK_LIST_LIMIT);

@@ -28,6 +28,22 @@ Proposed by Claude and approved by the owner with the plan, 2026-11-10.
 
 - A silent user shows as away after 2 minutes. An automatic close after 2 hours was also approved here, and the owner has since replaced it (see Product).
 - Users see their own time log. Admins see everyone's and can export them.
+
+## PR 6 Backblaze
+
+Chosen by the owner when PR 6 started, 2026-11-11.
+
+- PR 6 is split into three PRs: 6a attachments, 6b profile pictures, 6c CSV export.
+- Time-log CSV exports are built on the spot and downloaded directly. They are not stored in Backblaze, so there is no `time_exports` table.
+- A project's files can be seen and downloaded by its owner and by the person who sent it as a task.
+- Uploads are tested locally against the real bucket, then checked on the live site after merging. Preview deployments stay logged out.
+
+Proposed by Claude in PR 6a, 2026-11-11, for the owner to confirm in review.
+
+- The owner and the sender can both add files, only while the project is active. Old files stay downloadable after Finish.
+- The uploader or the project's owner can remove a file.
+- At most 20 files per project. Upload and download links work for 5 minutes. An upload not finished within an hour is cleared away.
+- Files can only be added once a task is accepted, so a waiting task has no files.
 - A finished task or archived project loses its cubicle, and its history stays in the time log. The owner has since replaced tasks and archiving here with Finish and Reopen on projects (see Product).
 - Only a cubicle's owner can start work there.
 - A plain list of who is working on what backs up the 3D view, for phones, keyboard users and devices that cannot run 3D.

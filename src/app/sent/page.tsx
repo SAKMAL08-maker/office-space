@@ -1,3 +1,4 @@
+import { filesByProject } from "@/server/attachments";
 import { requireCheckedIn } from "@/server/session";
 import { listSent } from "@/server/tasks";
 import { listOtherPeople } from "@/server/users";
@@ -5,6 +6,7 @@ import { ActionButton } from "@/ui/action-button";
 import { cardClass, mutedTextClass } from "@/ui/form-parts";
 import { LocalTime } from "@/ui/local-time";
 import { WorkDetails, WorkPage } from "@/ui/work-page";
+import { FileList } from "../attachments/file-list";
 import { cancelTaskAction } from "./actions";
 import { SendTaskForm } from "./send-task-form";
 
@@ -18,6 +20,8 @@ const STATUS_LABEL = {
 async function SentContent() {
   const user = await requireCheckedIn();
   const [sent, people] = await Promise.all([listSent(user.id), listOtherPeople(user.id)]);
+  const projectIds = sent.flatMap((task) => (task.projectId ? [task.projectId] : []));
+  const files = await filesByProject(user.id, projectIds);
 
   return (
     <>
@@ -42,6 +46,13 @@ async function SentContent() {
                 {STATUS_LABEL[task.status]}
                 {task.rejectReason && `: ${task.rejectReason}`}
               </p>
+              {task.projectId && (
+                <FileList
+                  projectId={task.projectId}
+                  files={files.get(task.projectId) ?? []}
+                  canUpload={!task.projectFinishedAt}
+                />
+              )}
               {task.status === "pending" && (
                 <div>
                   <ActionButton action={cancelTaskAction} id={task.id} label="Cancel task" />
