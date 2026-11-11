@@ -18,3 +18,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-11 | PR 5a Working: details panel, start/stop work, indicators, new character and furniture, tests  | Claude Code     |
 | 2026-11-11 | PR 5b Presence: live spots, other people's characters, away, Who's in list, migration, tests   | Claude Code     |
 | 2026-11-11 | PR 5c Visual polish: shadows, floor patterns, walls, machines, swinging gate, plants, tests    | Claude Code     |
+| 2026-11-11 | Fix: side walkways in each office so full rows of desks never block cubicles, tests            | Claude Code     |
