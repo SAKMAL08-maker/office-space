@@ -60,7 +60,15 @@ async function Welcome() {
     </>
   );
 
-  return <Office checkedIn={open !== null} floor={floor} greeting={greeting} menu={menu} />;
+  return (
+    <Office
+      viewerId={user.id}
+      checkedIn={open !== null}
+      floor={floor}
+      greeting={greeting}
+      menu={menu}
+    />
+  );
 }
 
 export default function Home() {

@@ -5,6 +5,7 @@ import { type ReactNode, useState, useSyncExternalStore } from "react";
 import type { FloorOffice } from "@/server/floor";
 import { quietButtonClass } from "@/ui/form-parts";
 import type { MachineKind, MachineRequest } from "@/world/walk";
+import { CubiclePanel } from "./cubicle-panel";
 import { Machines, useMachines } from "./machines";
 
 function SceneMessage({ children }: { children: ReactNode }) {
@@ -41,6 +42,7 @@ function useCan3D(): boolean | null {
 }
 
 type OfficeProps = {
+  viewerId: string;
   checkedIn: boolean;
   floor: { viewerId: string; offices: FloorOffice[] } | null;
   greeting: ReactNode;
@@ -68,7 +70,17 @@ export function Office(props: OfficeProps) {
   return <OfficeScene {...props} ready={can3D === true} />;
 }
 
+/** The selected cubicle's latest details, looked up again on every refresh, or null if it has gone. */
+function findCubicle(floor: OfficeProps["floor"], projectId: string | null) {
+  for (const office of floor?.offices ?? []) {
+    const cubicle = office.cubicles.find((c) => c.projectId === projectId);
+    if (cubicle) return { cubicle, office };
+  }
+  return null;
+}
+
 function OfficeScene({
+  viewerId,
   checkedIn,
   floor,
   greeting,
@@ -77,6 +89,8 @@ function OfficeScene({
 }: OfficeProps & { ready: boolean }) {
   const { checkIn, checkOut, pending, messages } = useMachines(checkedIn);
   const [machineRequest, setMachineRequest] = useState<MachineRequest | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = findCubicle(floor, selectedId);
 
   const goToMachine = (kind: MachineKind) =>
     setMachineRequest((previous) => ({ kind, id: (previous?.id ?? 0) + 1 }));
@@ -88,9 +102,10 @@ function OfficeScene({
         {ready && (
           <World
             offices={floor?.offices ?? null}
-            viewerId={floor?.viewerId ?? ""}
+            viewerId={viewerId}
             machineRequest={machineRequest}
             onUseMachine={pressMachine}
+            onSelectCubicle={setSelectedId}
           />
         )}
       </div>
@@ -125,11 +140,23 @@ function OfficeScene({
           {messages}
         </div>
       </div>
-      <p className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-4">
-        <span className="rounded-full bg-zinc-900/80 px-3 py-1 text-center text-xs text-white">
-          Click the floor to walk there. Click a machine, a door or a desk to go to it.
-        </span>
-      </p>
+      {selected ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3">
+          <CubiclePanel
+            key={selected.cubicle.projectId}
+            cubicle={selected.cubicle}
+            ownerName={selected.office.name}
+            mine={selected.office.ownerId === viewerId}
+            onClose={() => setSelectedId(null)}
+          />
+        </div>
+      ) : (
+        <p className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-4">
+          <span className="rounded-full bg-zinc-900/80 px-3 py-1 text-center text-xs text-white">
+            Click the floor to walk there. Click a machine, a door or a desk to go to it.
+          </span>
+        </p>
+      )}
     </div>
   );
 }

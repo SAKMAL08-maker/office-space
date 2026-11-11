@@ -2,12 +2,26 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { listTimeLog } from "@/server/attendance";
 import { requireUser } from "@/server/session";
+import { listWorkLog } from "@/server/work";
 import { Loading, quietButtonClass } from "@/ui/form-parts";
 import { TimeLogList } from "@/ui/time-log-list";
+import { WorkLogList } from "@/ui/work-log-list";
 
 async function MyTimeLog() {
   const user = await requireUser();
-  return <TimeLogList entries={await listTimeLog(user.id)} />;
+  const [attendance, work] = await Promise.all([listTimeLog(user.id), listWorkLog(user.id)]);
+  return (
+    <>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Check-ins</h2>
+        <TimeLogList entries={attendance} />
+      </section>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Work periods</h2>
+        <WorkLogList entries={work} />
+      </section>
+    </>
+  );
 }
 
 export default function TimeLogPage() {

@@ -4,6 +4,7 @@ import { ActionButton } from "@/ui/action-button";
 import { cardClass, mutedTextClass } from "@/ui/form-parts";
 import { LocalTime } from "@/ui/local-time";
 import { WorkDetails, WorkPage } from "@/ui/work-page";
+import { startWorkAction, stopWorkAction } from "../actions";
 import { finishProjectAction, reopenProjectAction } from "./actions";
 import { EditProjectForm } from "./edit-project-form";
 import { NewProjectForm } from "./new-project-form";
@@ -11,7 +12,7 @@ import { NewProjectForm } from "./new-project-form";
 type Project = Awaited<ReturnType<typeof listProjects>>[number];
 
 function ProjectCard({ project }: { project: Project }) {
-  const { id, title, description, finishedAt, seat, sentBy } = project;
+  const { id, title, description, finishedAt, seat, sentBy, workingSince } = project;
   return (
     <li className={cardClass}>
       <WorkDetails title={title} description={description} />
@@ -25,12 +26,22 @@ function ProjectCard({ project }: { project: Project }) {
         )}
         {sentBy && `, sent by ${sentBy}`}
       </p>
+      {workingSince && (
+        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          Working here since <LocalTime value={workingSince} />
+        </p>
+      )}
       {finishedAt ? (
         <div>
           <ActionButton action={reopenProjectAction} id={id} label="Reopen" />
         </div>
       ) : (
         <div className="flex flex-wrap items-start gap-2">
+          {workingSince ? (
+            <ActionButton action={stopWorkAction} id={id} label="Stop working" />
+          ) : (
+            <ActionButton action={startWorkAction} id={id} label="Start working here" primary />
+          )}
           <EditProjectForm id={id} title={title} description={description} />
           <ActionButton action={finishProjectAction} id={id} label="Finish" />
         </div>
