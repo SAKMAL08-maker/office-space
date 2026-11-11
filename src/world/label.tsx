@@ -28,17 +28,25 @@ function drawLabel(text: string, background: string) {
   return { texture, width: (HEIGHT * canvas.width) / canvas.height };
 }
 
+const BACKGROUNDS = {
+  plain: "#18181bd9",
+  /** The person's own office. */
+  own: "#047857",
+  /** Someone working right now. */
+  working: "#b45309",
+};
+
 /** A floating sign that always faces the camera and is drawn on top, so walls never hide it. */
 export function Label({
   text,
   position,
-  strong = false,
+  tone = "plain",
 }: {
   text: string;
   position: [number, number, number];
-  strong?: boolean;
+  tone?: keyof typeof BACKGROUNDS;
 }) {
-  const label = useMemo(() => drawLabel(text, strong ? "#047857" : "#18181bd9"), [text, strong]);
+  const label = useMemo(() => drawLabel(text, BACKGROUNDS[tone]), [text, tone]);
   useEffect(() => () => label.texture.dispose(), [label]);
 
   return (

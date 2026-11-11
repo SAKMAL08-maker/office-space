@@ -1,13 +1,62 @@
 import { colors } from "./colors";
-import { type CubicleLayout, rectCentre } from "./layout";
+import { Desk } from "./desk";
+import { Label } from "./label";
+import { type CubicleInfo, type CubicleLayout, rectCentre } from "./layout";
+import { Monitor } from "./monitor";
+import { OfficeChair } from "./office-chair";
 import { clickable } from "./pointer";
+import { SeatedPerson } from "./seated-person";
+import { WorkGlow } from "./work-glow";
+
+const LABEL_LENGTH = 32;
+
+const shorten = (text: string) =>
+  text.length > LABEL_LENGTH ? `${text.slice(0, LABEL_LENGTH - 1)}…` : text;
+
+/** Fabric walls behind and beside the desk. They stay in the desk's row, clear of the walkway. */
+function Partitions() {
+  return (
+    <group>
+      <mesh position={[0, 0.6, -0.47]}>
+        <boxGeometry args={[2.9, 1.2, 0.06]} />
+        <meshStandardMaterial color={colors.partition} />
+      </mesh>
+      <mesh position={[0, 1.22, -0.47]}>
+        <boxGeometry args={[2.94, 0.04, 0.1]} />
+        <meshStandardMaterial color={colors.partitionTrim} />
+      </mesh>
+      {[-1.42, 1.42].map((x) => (
+        <mesh key={x} position={[x, 0.5, -0.03]}>
+          <boxGeometry args={[0.05, 1.0, 0.86]} />
+          <meshStandardMaterial color={colors.partition} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 /**
- * One project's cubicle: a desk against a low back panel, a monitor and a chair.
- * Clicking it walks the person to the chair. PR 5 adds its details panel and the "working" glow.
+ * One project's cubicle: partitions, a desk, a monitor and a chair on the seat cell in front.
+ * While its owner works there, the floor glows, the screen lights up, they sit in the chair, and a
+ * label shows their name and the project. Clicking it walks there and opens its details.
  */
-export function Cubicle({ cubicle, onUse }: { cubicle: CubicleLayout; onUse: () => void }) {
+export function Cubicle({
+  cubicle,
+  info,
+  ownerId,
+  ownerName,
+  viewerId,
+  onUse,
+}: {
+  cubicle: CubicleLayout;
+  info: CubicleInfo | undefined;
+  ownerId: string;
+  ownerName: string;
+  viewerId: string;
+  onUse: () => void;
+}) {
   const desk = rectCentre(cubicle.desk);
+  const working = Boolean(info?.workingSince);
   return (
     <group
       position={[desk.x, 0, desk.z]}
@@ -17,43 +66,29 @@ export function Cubicle({ cubicle, onUse }: { cubicle: CubicleLayout; onUse: () 
       }}
       {...clickable}
     >
-      <mesh position={[0, 0.6, -0.45]}>
-        <boxGeometry args={[2.8, 1.2, 0.08]} />
-        <meshStandardMaterial color={colors.panel} />
-      </mesh>
-      <mesh position={[0, 0.72, 0]}>
-        <boxGeometry args={[2.4, 0.06, 0.8]} />
-        <meshStandardMaterial color={colors.desk} />
-      </mesh>
-      {[-1.1, 1.1].map((x) => (
-        <mesh key={x} position={[x, 0.35, 0]}>
-          <boxGeometry args={[0.08, 0.7, 0.7]} />
-          <meshStandardMaterial color={colors.desk} />
-        </mesh>
-      ))}
-      <mesh position={[0, 1.0, -0.2]}>
-        <boxGeometry args={[0.7, 0.42, 0.05]} />
-        <meshStandardMaterial color={colors.monitor} />
-      </mesh>
-      <mesh position={[0, 1.0, -0.17]}>
-        <boxGeometry args={[0.62, 0.34, 0.01]} />
-        <meshStandardMaterial color={colors.screen} />
-      </mesh>
-      {/* The chair stands on the seat cell, one cell in front of the desk. */}
-      <group position={[0, 0, 1]}>
-        <mesh position={[0, 0.45, 0]}>
-          <boxGeometry args={[0.5, 0.08, 0.5]} />
-          <meshStandardMaterial color={colors.chair} />
-        </mesh>
-        <mesh position={[0, 0.75, 0.22]}>
-          <boxGeometry args={[0.5, 0.55, 0.06]} />
-          <meshStandardMaterial color={colors.chair} />
-        </mesh>
-        <mesh position={[0, 0.22, 0]}>
-          <cylinderGeometry args={[0.04, 0.04, 0.44]} />
-          <meshStandardMaterial color={colors.monitor} />
-        </mesh>
+      {working && (
+        <group position={[0, 0, 0.5]}>
+          <WorkGlow width={3} depth={2} />
+        </group>
+      )}
+      <Partitions />
+      <Desk />
+      <group position={[0, 0, -0.22]}>
+        <Monitor lit={working} />
       </group>
+      {/* The chair stands on the seat cell, one cell in front of the desk, facing it. */}
+      <group position={[0, 0, 1]}>
+        <OfficeChair />
+        {/* The viewer's own character sits here by itself, so only other people are drawn. */}
+        {working && ownerId !== viewerId && <SeatedPerson personId={ownerId} />}
+      </group>
+      {working && info && (
+        <Label
+          text={`${ownerName} · ${shorten(info.title)}`}
+          position={[0, 2.1, 0.3]}
+          tone="working"
+        />
+      )}
     </group>
   );
 }
