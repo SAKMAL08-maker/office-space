@@ -264,3 +264,26 @@ export const workSessions = pgTable(
     ),
   ],
 );
+
+// Where each person last stood in the office, and when their open tab last said "still here".
+// One row per person, overwritten every few seconds. It is not a record: nothing reads its history.
+// A tab without the 3D office sends no spot, so x and z stay empty until one does.
+
+export const presence = pgTable(
+  "presence",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    x: integer("x"),
+    z: integer("z"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check("presence_spot_check", sql`(${table.x} is null) = (${table.z} is null)`),
+    check(
+      "presence_spot_range_check",
+      sql`${table.x} between -1000 and 1000 and ${table.z} between -1000 and 1000`,
+    ),
+  ],
+);
