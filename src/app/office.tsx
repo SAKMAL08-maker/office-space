@@ -1,12 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { type ReactNode, useState, useSyncExternalStore } from "react";
-import type { FloorOffice } from "@/server/floor";
+import { type ReactNode, useRef, useState, useSyncExternalStore } from "react";
+import type { Floor } from "@/server/floor";
 import { quietButtonClass } from "@/ui/form-parts";
+import type { OfficeInfo } from "@/world/layout";
+import { withLiveWork } from "@/world/people";
 import type { MachineKind, MachineRequest } from "@/world/walk";
+import type { SpotReader } from "@/world/world";
 import { CubiclePanel } from "./cubicle-panel";
 import { Machines, useMachines } from "./machines";
+import { PeopleList } from "./people-list";
+import { usePresence } from "./presence";
 
 function SceneMessage({ children }: { children: ReactNode }) {
   return (
@@ -44,7 +49,7 @@ function useCan3D(): boolean | null {
 type OfficeProps = {
   viewerId: string;
   checkedIn: boolean;
-  floor: { viewerId: string; offices: FloorOffice[] } | null;
+  floor: Floor | null;
   greeting: ReactNode;
   menu: ReactNode;
 };
@@ -52,27 +57,40 @@ type OfficeProps = {
 /** The home page: the 3D office with a menu over it, or plain buttons where 3D cannot run. */
 export function Office(props: OfficeProps) {
   const can3D = useCan3D();
-  if (can3D === false) {
-    const { checkedIn, greeting, menu } = props;
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">Office Space</h1>
-        {greeting}
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          This browser cannot show the 3D office, so here are the machines as buttons.
-        </p>
-        <Machines checkedIn={checkedIn} />
-        <div className="flex flex-wrap justify-center gap-2">{menu}</div>
-      </div>
-    );
-  }
+  if (can3D === false) return <PlainOffice {...props} />;
   // Until the browser has been checked, the scene's frame shows with a loading message.
   return <OfficeScene {...props} ready={can3D === true} />;
 }
 
+/** Without 3D: the machines as buttons, and once checked in, the list of who is in. */
+function PlainOffice({ viewerId, checkedIn, floor, greeting, menu }: OfficeProps) {
+  // There is no place to send, so this only says "still here".
+  const people = usePresence({
+    enabled: floor !== null,
+    floorKey: floor?.key ?? null,
+    readSpot: () => null,
+  });
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <h1 className="text-3xl font-semibold tracking-tight">Office Space</h1>
+      {greeting}
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        This browser cannot show the 3D office, so here are the machines as buttons.
+      </p>
+      <Machines checkedIn={checkedIn} />
+      <div className="flex flex-wrap justify-center gap-2">{menu}</div>
+      {floor && (
+        <div className="w-full max-w-md rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+          <PeopleList people={people} viewerId={viewerId} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** The selected cubicle's latest details, looked up again on every refresh, or null if it has gone. */
-function findCubicle(floor: OfficeProps["floor"], projectId: string | null) {
-  for (const office of floor?.offices ?? []) {
+function findCubicle(offices: OfficeInfo[] | null, projectId: string | null) {
+  for (const office of offices ?? []) {
     const cubicle = office.cubicles.find((c) => c.projectId === projectId);
     if (cubicle) return { cubicle, office };
   }
@@ -90,7 +108,16 @@ function OfficeScene({
   const { checkIn, checkOut, pending, messages } = useMachines(checkedIn);
   const [machineRequest, setMachineRequest] = useState<MachineRequest | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = findCubicle(floor, selectedId);
+  const [showPeople, setShowPeople] = useState(false);
+  const spot = useRef<SpotReader>(null);
+  const people = usePresence({
+    enabled: floor !== null,
+    floorKey: floor?.key ?? null,
+    readSpot: () => spot.current?.read() ?? null,
+  });
+  // Other people's glows follow presence, so they change within seconds instead of on a reload.
+  const offices = floor && withLiveWork(floor.offices, people, viewerId);
+  const selected = findCubicle(offices, selectedId);
 
   const goToMachine = (kind: MachineKind) =>
     setMachineRequest((previous) => ({ kind, id: (previous?.id ?? 0) + 1 }));
@@ -101,8 +128,10 @@ function OfficeScene({
       <div className="absolute inset-0">
         {ready && (
           <World
-            offices={floor?.offices ?? null}
+            offices={offices}
             viewerId={viewerId}
+            people={people}
+            spotRef={spot}
             machineRequest={machineRequest}
             onUseMachine={pressMachine}
             onSelectCubicle={setSelectedId}
@@ -132,8 +161,20 @@ function OfficeScene({
             >
               Go to check-out machine
             </button>
+            {floor && (
+              <button
+                type="button"
+                onClick={() => setShowPeople((shown) => !shown)}
+                aria-expanded={showPeople}
+                className={quietButtonClass}
+              >
+                {/* Not "People", which is the admin's page of accounts in the same menu. */}
+                {showPeople ? "Hide who's in" : `Who's in${people ? ` (${people.length})` : ""}`}
+              </button>
+            )}
             {menu}
           </div>
+          {floor && showPeople && <PeopleList people={people} viewerId={viewerId} />}
           {pending && (
             <p className="text-sm text-zinc-600 dark:text-zinc-400">Using the machine…</p>
           )}
