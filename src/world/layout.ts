@@ -62,11 +62,14 @@ export type WorldLayout = {
 
 const LOBBY_HALF = 11;
 const LOBBY_DEPTH = 10;
-const ROOM_WIDTH = 11;
 const CORRIDOR = 3;
 const AISLE = 2;
+/** A one-cell walkway down each side of the desks, so a full row never shuts off the row behind. */
+const SIDE_AISLE = 1;
 const CUBICLE = 3;
 const CUBICLES_PER_ROW = 3;
+/** A row of desks, a walkway each side and the two side walls. It stays odd, so the door is centred. */
+const ROOM_WIDTH = CUBICLES_PER_ROW * CUBICLE + 2 * SIDE_AISLE + 2;
 const MAX_COLUMNS = 4;
 const DOOR_WIDTH = 3;
 
@@ -110,7 +113,7 @@ function placeOffice(office: OfficeInput, x: number, front: number): OfficeLayou
   const cubicles = office.seats.map((seat) => {
     const column = (seat - 1) % CUBICLES_PER_ROW;
     const row = Math.floor((seat - 1) / CUBICLES_PER_ROW);
-    const deskX = interior.x + column * CUBICLE;
+    const deskX = interior.x + SIDE_AISLE + column * CUBICLE;
     const deskZ = interior.z + row * CUBICLE;
     return {
       seat,
