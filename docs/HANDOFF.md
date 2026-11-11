@@ -1,12 +1,12 @@
-# Handoff — 2026-11-10
+# Handoff — 2026-11-11
 
 ## Where things stand
 
-PRs 0 to 3 are merged and live at https://office-space-tawny.vercel.app: Foundation (#1), Accounts (#3), Attendance (#6, plus the check-out machine, #7) and Work items (#9, merge `e2fa411`), plus the PR 3 wrap-up docs (#10). All three migrations are applied to Neon through the Migrate production workflow.
+PRs 0 to 4 are merged and live at https://office-space-tawny.vercel.app: Foundation (#1), Accounts (#3), Attendance (#6, plus the check-out machine, #7), Work items (#9), the PR 3 wrap-up docs (#10) and the 3D world (#11, merge `7b3d4c7`). All three migrations are applied to Neon through the Migrate production workflow. PR 4 had no migration. After its deploy, `/api/health` and the home page returned 200.
 
 People can log in, check in and out, and read their time log. Once checked in, they can send tasks (Sent tasks), accept or reject them (Inbox, with a count on the home page), and create, edit, finish and reopen projects (My projects). Admins also have Everyone's time log and People.
 
-**PR 4 (3D world) is open on `feat/3d-world`, not merged.** The home page becomes a 3D office: a lobby with the two machines and a gate, then a floor of offices (one per person, name plate over the door) with one cubicle per active project, placed by `seat`. You click the floor to walk, and clicking a machine walks you there and uses it. The floor data comes from `getFloor()` in `src/server/floor.ts`, which calls `requireCheckedIn()` itself. Browsers without 3D get the old buttons.
+The home page is a 3D office: a lobby with the two machines and a gate, then a floor of offices (one per person, name plate over the door) with one cubicle per active project, placed by `seat`. You click the floor to walk, and clicking a machine walks you there and uses it. The floor data comes from `getFloor()` in `src/server/floor.ts`, which calls `requireCheckedIn()` itself. Browsers without 3D get the old buttons. You see only your own character.
 
 **How tasks work (owner's correction):** a task is a project offered to someone. It becomes their project, with one cubicle, only if they accept it. Tasks never sit inside projects. At most 10 can be waiting from one sender to one receiver.
 
@@ -14,27 +14,26 @@ People can log in, check in and out, and read their time log. Once checked in, t
 
 ## In progress
 
-PR 4 is waiting for the owner's review and "merge it". It has no migration. Nothing is half-built.
+Nothing. This wrap-up docs PR is the only open one. Nothing is half-built.
 
 ## Next steps
 
-1. Owner reviews PR 4, ideally on its Vercel preview (it is logged out there, so mostly a look at the login page) and after merging on the live site, with two people.
-2. Owner tries PR 3 live with two people: check in, send a task, accept it, and see the project in My projects. Also try both machines and My time log, which is not confirmed live either.
-3. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler.
-4. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
-5. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
+1. Owner tries the live site with two people: log in, walk to the check-in machine, see both offices and name plates, send a task, accept it, see the cubicle appear, walk into an office, then walk to the check-out machine. Also check My time log. None of this is confirmed live yet, and phones and real graphics cards are untested.
+2. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler.
+3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
+4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
 
 ## Open decisions (owner)
 
-- Whether to delete the 10 merged branches (all fully in `main`). Claude explained it is safe with `git branch -d`; the owner has not said yes yet.
+- Whether to delete the 11 merged branches (all fully in `main`). Claude explained it is safe with `git branch -d`; the owner has not said yes yet.
 - At PR 6: whether preview deployments get their own Neon database. Until then, leave `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
 - Whether the check-out machine should ask for confirmation, and whether admins can correct a logged time. Neither is built.
 
 ## Verified vs. not
 
 - Tested: 92 Vitest tests in 9 files, locally on a throwaway Postgres. Two-person headless browser walk-throughs on a local production build at 1280px and 390px wide, covering accounts, both machines, time logs, and all of PR 3 (gate, limit of 10, cancel, accept, reject, edit, finish, reopen).
-- PR 4 tested locally: layout, route finder, walking and the floor gate in Vitest. A headless Edge walk-through on a local production build (software 3D) at 1280px and 390px: lobby, no office names in the page before check-in, walking to each machine checks in and out, the floor opening, cubicles, walking into an office, a link away and back, the "still not checked out" question, and the plain-button fallback with 3D switched off. Screenshots were checked by eye. Not verified: real phones and touch, real graphics cards, or many offices at once.
-- Tested live: all migration runs succeeded. After the PR 3 deploy, `/api/health` returned 200 and the new pages loaded.
+- PR 4 tested locally before merging: layout, route finder, walking and the floor gate in Vitest. A headless Edge walk-through on a local production build (software 3D) at 1280px and 390px: lobby, no office names in the page before check-in, walking to each machine checks in and out, the floor opening, cubicles, walking into an office, a link away and back, the "still not checked out" question, and the plain-button fallback with 3D switched off. Screenshots were checked by eye. Not verified: real phones and touch, real graphics cards, or many offices at once.
+- Tested live: all migration runs succeeded. After the PR 3 and PR 4 deploys, `/api/health` returned 200 and the pages loaded.
 - Not verified: using any feature while logged in on the live site. A direct query of the live tables, because Claude does not hold the database address. Invite and reset links live. Preview deployments reaching a database.
 
 ## Watch out for
