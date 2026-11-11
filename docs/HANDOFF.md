@@ -38,7 +38,7 @@ People can log in, check in and out, send, accept and reject tasks, and manage p
 
 ## Watch out for
 
-- **Permission prompts:** the owner can't keep switching windows to approve commands. Put each multi-step shell job (start server, run browser script, stop server; checks, commit, push, PR) into one command, and don't copy big folders.
+- **Permission prompts:** the owner can't keep switching windows to approve commands. `.claude/settings.local.json` allows `git *`, `npm *`, `gh pr *` and a few more by prefix, so run those as separate simple commands (no prompt). Wrapping them in a bigger script makes it prompt. Batch into one command only what no rule covers (start server, run browser script, stop server). Don't copy big folders.
 - Local browser tests: throwaway `embedded-postgres` outside the repo on port 54339, `node node_modules/next/dist/bin/next start -p 3100` (via `Start-Process`, stopped in `finally`), Playwright from an earlier install imported by absolute path, `channel: "msedge"` with `--use-angle=swiftshader --enable-unsafe-swiftshader`, and `visible=true` selectors (hidden pages leave duplicate forms). `/setup` only opens with a `SETUP_TOKEN` of 24 or more characters. A character working at a seat starts in its chair, which is the easy way to put the camera inside an office.
 - `gh api -q` filters with spaces break in Windows PowerShell; pipe to `ConvertFrom-Json` instead. Vercel reports deploys as commit statuses (context `Vercel`), not GitHub deployments.
 - three r187 removed `PCFSoftShadowMap`, so the canvas uses `shadows="percentage"`. React-three-fiber logs a harmless `THREE.Clock` notice.
