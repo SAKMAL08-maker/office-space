@@ -19,9 +19,10 @@ Nothing. This wrap-up docs PR is the only open one. Nothing is half-built.
 ## Next steps
 
 1. Owner tries the live site with two people: log in, walk to the check-in machine, see both offices and name plates, send a task, accept it, see the cubicle appear, walk into an office, then walk to the check-out machine. Also check My time log. None of this is confirmed live yet, and phones and real graphics cards are untested.
-2. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler. Owner's direction after PR 4: what works comes first, but visual improvements are welcome when they fit. In each plan, say what the 3D will look like and which visual improvements are included.
-3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
-4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
+2. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler. Owner's direction after PR 4: what works comes first, but visual improvements are welcome when they fit. In each plan, say what the 3D will look like and which visual improvements are included. PR 5 includes nicer versions of the parts it already touches: a better character (including sitting down), desk, chair and monitor (lit when working).
+3. Visual polish, as its own small PR after PR 5, so it cannot break features: softer lighting and shadows, floor patterns, plants, and nicer machines and gate. Not yet in `docs/PLAN.md`'s build order; add it there once the owner agrees where it goes.
+4. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
+5. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
 
 ## Open decisions (owner)
 
