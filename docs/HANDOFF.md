@@ -12,26 +12,34 @@ People can log in, check in and out, send, accept and reject tasks, and manage p
 
 ## In progress
 
-- Nothing in code. This wrap-up is its own small docs PR.
+- **PR 6a Attachments** (branch `feat/project-attachments`): project files in a private Backblaze bucket. The owner and the task's sender upload, see and download them on My projects and Sent. Uploads go from the browser straight to the bucket through a 5-minute link signed for the exact size and headers; the server then checks the size in the bucket before marking the file ready. Downloads go through `/api/attachments/<id>`, which checks the gate and access and redirects to a fresh 5-minute link that always downloads. One new migration, `20261111125957_attachments.sql` (one new table, nothing changed). PR 6 is split into 6a, 6b pictures and 6c CSV export (owner, 2026-11-11).
 
 ## Next steps
 
-1. Owner checks the live site: the new look, the gate swinging on check-in, an office with 6 or more projects (every desk reachable), and how it runs on a real phone.
-2. Then PR 6 Backblaze (files).
-3. For any migration: show the owner the SQL, get a yes, the owner runs `! gh workflow run migrate.yml --ref <branch>`, Claude checks the run, then merges.
-4. Add Playwright to the repo with the first committed browser test.
+1. **Owner: Backblaze setup** (keys never go in the chat):
+   1. Create a **private** bucket. In its Lifecycle settings, choose "Keep only the last version", so removed files really go.
+   2. Create an application key limited to that bucket, with read and write access.
+   3. Type `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET` and `B2_ENDPOINT` (the bucket's S3 endpoint, with `https://` in front) into Vercel (Production) and into your own `.env.local`.
+   4. Run `! node --env-file=.env.local scripts/set-bucket-cors.mjs https://office-space-tawny.vercel.app http://localhost:3000`. If Backblaze says AccessDenied, the key may not change bucket settings: make a temporary key that can, run it once with that, then delete the temporary key.
+2. Claude tests a real upload and download from a local server against the bucket, and checks an expired link fails.
+3. Owner reads the migration SQL; on a yes, the owner runs `! gh workflow run migrate.yml --ref feat/project-attachments`, Claude checks the run, then merges on "merge it". The migration must run **before** the merge: the new code reads the new table.
+4. After the merge: one live upload and download.
+5. Then 6b profile pictures, 6c CSV export. Later: Playwright in the repo with the first committed browser test.
+6. Still open from before: the owner's live check of the 5c look, the gate swing, an office with 6 or more projects, and a real phone.
 
 ## Open decisions (owner)
 
 - The owner's one-line reasons, for `docs/decisions.md`: polish before PR 6; floors that refresh by themselves; the faded grey away look.
 - The owner's reflection lines for PR 5a, PR 5c and the cubicle-row fix in `docs/ai-logs/SESSION-LOG.md`.
 - Whether to delete merged branches on GitHub (including `fix/cubicle-row-walkway`). Not approved yet.
-- At PR 6: whether preview deployments get their own Neon database. Until then, keep `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
+- PR 6a defaults Claude proposed (in `docs/decisions.md`): sender can upload too, 20 files per project, 5-minute links, uploader or owner removes, no files on a waiting task. And the owner's one-line reasons for the four PR 6 choices.
+- Preview deployments stay logged out (owner, 2026-11-11). Keep `BETTER_AUTH_SECRET` out of Vercel's Preview environment.
 - Whether check-out asks for confirmation, whether admins can correct a logged time, and whether Everyone's time log shows work periods.
 
 ## Verified vs. not
 
-- Tested: 125 Vitest tests in 13 files (CI on #19 and `main`, with Postgres; locally the 91 database tests skip), plus lint, format, typecheck and build. The new walkway tests fail with the old layout and pass with the fix.
+- PR 6a, tested: 147 Vitest tests in 15 files, run locally against a throwaway Postgres (bucket replaced by a pretend one in the tests), plus lint, format, typecheck and build. Rendered with throwaway data and fake keys (headless Edge): My projects and Sent at 1280px and 390px; the download address answered 302 to a 5-minute link that forces download, 404 for an unknown file; the upload sent exactly the signed headers. The fake-key upload and size check reached real Backblaze and were refused (403), as expected. **Not verified yet: any real upload or download, the CORS rule, and an expired link.**
+- Before PR 6a: 125 Vitest tests in 13 files (CI on #19 and `main`, with Postgres; locally the 91 database tests skip), plus lint, format, typecheck and build. The new walkway tests fail with the old layout and pass with the fix.
 - Rendered with throwaway data (headless Edge, software graphics): a 12-cubicle office at 1280px and 390px, and a walk from a back-row chair past a full row of desks; earlier, 5c's lobby, gate swing and phones, and 5b's two-person presence walk-through.
 - Live: deploy status, health and login after the merge; earlier migration runs.
 - Not verified: anything while logged in on the live site, real phones and graphics cards (shadows are the main cost), many offices or people at once, a real 2-minute wait, two tabs of the same person, invite and reset links live.

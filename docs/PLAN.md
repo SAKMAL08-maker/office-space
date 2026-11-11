@@ -8,18 +8,20 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 
 ## Status
 
-| PR  | Name       | Status      |
-| --- | ---------- | ----------- |
-| 0   | Foundation | Done        |
-| 1   | Accounts   | Done        |
-| 2   | Attendance | Done        |
-| 3   | Work items | Done        |
-| 4   | 3D world   | Done        |
-| 5a  | Working    | Done        |
-| 5b  | Presence   | Done        |
-| 5c  | Polish     | Done        |
-| 6   | Backblaze  | Not started |
-| 7   | Hardening  | Not started |
+| PR  | Name        | Status      |
+| --- | ----------- | ----------- |
+| 0   | Foundation  | Done        |
+| 1   | Accounts    | Done        |
+| 2   | Attendance  | Done        |
+| 3   | Work items  | Done        |
+| 4   | 3D world    | Done        |
+| 5a  | Working     | Done        |
+| 5b  | Presence    | Done        |
+| 5c  | Polish      | Done        |
+| 6a  | Attachments | In review   |
+| 6b  | Pictures    | Not started |
+| 6c  | CSV export  | Not started |
+| 7   | Hardening   | Not started |
 
 ## Owner decisions so far
 
@@ -64,7 +66,7 @@ A task is a project offered to someone. It is called a task until the receiver a
 - Finish removes the cubicle and keeps the project. Reopen gives it the owner's lowest free seat.
 
 **Data tables**
-`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `presence` (each person's last cell and last-seen time), `attachments`, `time_exports`.
+`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `presence` (each person's last cell and last-seen time), `attachments`.
 
 Database rules enforce the key facts: one open attendance per user, one open work session per user, one cubicle per project, one project per task, no seat shared within an office.
 
@@ -90,18 +92,20 @@ Files stay small and each 3D object is its own component.
 
 ## Build order (one PR each)
 
-| #   | PR         | Outcome                                                                                                                   |
-| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Foundation | Private GitHub repo `office-space`, `.gitignore`, project `CLAUDE.md`, docs, CI, blank app live on Vercel, Neon connected |
-| 1   | Accounts   | Schema, login, invite links, first admin account, password reset by admin link                                            |
-| 2   | Attendance | Check-in/out rules, server gate, time log page                                                                            |
-| 3   | Work items | Projects, tasks, approval inbox, cubicle creation (plain 2D screens)                                                      |
-| 4   | 3D world   | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
-| 5a  | Working    | Details panel, start and stop working, occupied indicators, nicer character and furniture, work periods in the time log   |
-| 5b  | Presence   | Other people's characters, updates every 10 seconds, away after 2 minutes, "who's working" list                           |
-| 5c  | Polish     | Shadows and warmer light, patterned floors, finished walls, nicer machines, a swinging gate arm, potted plants            |
-| 6   | Backblaze  | Attachments, profile pictures, CSV exports                                                                                |
-| 7   | Hardening  | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
+| #   | PR          | Outcome                                                                                                                   |
+| --- | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Foundation  | Private GitHub repo `office-space`, `.gitignore`, project `CLAUDE.md`, docs, CI, blank app live on Vercel, Neon connected |
+| 1   | Accounts    | Schema, login, invite links, first admin account, password reset by admin link                                            |
+| 2   | Attendance  | Check-in/out rules, server gate, time log page                                                                            |
+| 3   | Work items  | Projects, tasks, approval inbox, cubicle creation (plain 2D screens)                                                      |
+| 4   | 3D world    | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
+| 5a  | Working     | Details panel, start and stop working, occupied indicators, nicer character and furniture, work periods in the time log   |
+| 5b  | Presence    | Other people's characters, updates every 10 seconds, away after 2 minutes, "who's working" list                           |
+| 5c  | Polish      | Shadows and warmer light, patterned floors, finished walls, nicer machines, a swinging gate arm, potted plants            |
+| 6a  | Attachments | Project files in Backblaze: owner and sender upload and download through short-lived links                                |
+| 6b  | Pictures    | Profile pictures in Backblaze (PNG, JPEG or WebP, 2 MB)                                                                   |
+| 6c  | CSV export  | Admins download the time log as a CSV, built on the spot (no storage)                                                     |
+| 7   | Hardening   | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
 
 Logic comes before 3D on purpose: the rules get tested first, and the scene only displays them.
 
@@ -133,6 +137,6 @@ Logic comes before 3D on purpose: the rules get tested first, and the scene only
 - **Each PR:** lint, format check, unit tests and build all pass in CI against a real Postgres database.
 - **Unit tests:** double check-in blocked, gate refuses unchecked-in users, accept creates exactly one project and cubicle, reject creates none, switching cubicles closes the earlier session, attendance stays open until the person checks out.
 - **Browser tests:** two users. A checks in, sends a task to B, B accepts, the cubicle appears, B starts work, A sees the indicator within one update, B checks out, and the time log shows correct durations.
-- **Backblaze:** real upload and download on a preview deployment, and confirm an expired link fails.
+- **Backblaze:** real upload and download against the real bucket from a local server, then on the live site after merging (preview deployments stay logged out; owner's choice, 2026-11-11). Confirm an expired link fails.
 - **By eye:** render the 3D scenes at desktop and phone widths and look at them before calling any UI PR done.
 - Each report will say plainly what was tested, what used mock data and what wasn't verified.
