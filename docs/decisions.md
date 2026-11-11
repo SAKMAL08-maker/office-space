@@ -113,3 +113,7 @@ Chosen by Claude while building PR 5b, 2026-11-11.
 - The button over the scene is called "Who's in", because the admin's menu already has "People" (the accounts page).
 - At their desk, a person's own name label is hidden: the cubicle's label already names them, and the two overlapped.
 - The viewer's own office keeps the floor's data, not presence's, so their own Start working does not flicker off while presence catches up.
+
+Chosen by the owner after PR 5b, 2026-11-11.
+
+- Claude Code's automatic safety check stays on, and no permission rule lets Claude start production migrations. Why: "it allows me to do manual reviews on actions that causes the check". The owner starts the Migrate production workflow with `!`.
