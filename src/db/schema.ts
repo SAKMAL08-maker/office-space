@@ -234,3 +234,33 @@ export const cubicles = pgTable(
     check("cubicles_seat_check", sql`${table.seat} >= 1`),
   ],
 );
+
+// Time spent working at a project's cubicle. A period ends when its owner stops, starts
+// somewhere else, checks out, or finishes the project.
+
+export const workSessions = pgTable(
+  "work_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+  },
+  (table) => [
+    // The database itself refuses a second open period, even if two starts arrive at once.
+    uniqueIndex("work_sessions_one_open_per_user")
+      .on(table.userId)
+      .where(sql`${table.endedAt} is null`),
+    index("work_sessions_user_started_idx").on(table.userId, table.startedAt),
+    index("work_sessions_project_idx").on(table.projectId),
+    check(
+      "work_sessions_order_check",
+      sql`${table.endedAt} is null or ${table.endedAt} >= ${table.startedAt}`,
+    ),
+  ],
+);
