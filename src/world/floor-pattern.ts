@@ -85,19 +85,27 @@ function drawCarpet(context: CanvasRenderingContext2D) {
 }
 
 const DRAW = { tiles: drawTiles, planks: drawPlanks, carpet: drawCarpet };
-const drawn = new Map<Pattern, HTMLCanvasElement>();
+const drawn = new Map<Pattern, Texture>();
 
-/** Draws a pattern once per page, in grey. Every floor that uses it shares the picture. */
-function canvasFor(pattern: Pattern) {
-  let canvas = drawn.get(pattern);
-  if (!canvas) {
-    canvas = document.createElement("canvas");
+/**
+ * Draws a pattern once per page, in grey. Copies of this texture share its picture, so the
+ * graphics card holds one per pattern however many floors use it.
+ */
+function baseFor(pattern: Pattern) {
+  let base = drawn.get(pattern);
+  if (!base) {
+    const canvas = document.createElement("canvas");
     canvas.width = SIZE;
     canvas.height = SIZE;
     DRAW[pattern](canvas.getContext("2d")!);
-    drawn.set(pattern, canvas);
+    base = new CanvasTexture(canvas);
+    base.colorSpace = SRGBColorSpace;
+    base.wrapS = RepeatWrapping;
+    base.wrapT = RepeatWrapping;
+    base.anisotropy = 4;
+    drawn.set(pattern, base);
   }
-  return canvas;
+  return base;
 }
 
 /**
@@ -109,11 +117,7 @@ export function floorTexture(
   pattern: Pattern,
   { left, front, width, depth }: { left: number; front: number; width: number; depth: number },
 ): Texture {
-  const texture = new CanvasTexture(canvasFor(pattern));
-  texture.colorSpace = SRGBColorSpace;
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.anisotropy = 4;
+  const texture = baseFor(pattern).clone();
   texture.repeat.set(width / PATTERN_METRES, depth / PATTERN_METRES);
   // The picture's v runs towards -z once the plane lies flat.
   texture.offset.set(left / PATTERN_METRES, -front / PATTERN_METRES);
