@@ -6,11 +6,13 @@ import { CameraRig } from "./camera-rig";
 import { colors } from "./colors";
 import { Floor } from "./floor";
 import { type Cell, layoutWorld, type OfficeInfo, toOfficeInput, type WorldLayout } from "./layout";
+import { Lights } from "./lights";
 import { Lobby } from "./lobby";
 import { Marker } from "./marker";
 import { OtherPerson } from "./other-person";
 import { buildGrid, findPath, isOpen, nearestOpenCell } from "./path";
 import { type LivePerson, placePeople } from "./people";
+import { Plant } from "./plant";
 import { createWalker, type MachineKind, type MachineRequest, type Walker } from "./walk";
 import { Walls } from "./walls";
 import { Worker } from "./worker";
@@ -109,11 +111,17 @@ export default function World({
   const pick = (point: { x: number; z: number }) => goTo(nearestOpenCell(grid, point));
 
   return (
-    <Canvas camera={{ position: [layout.start.x, 15, layout.start.z + 8], fov: 45 }} dpr={[1, 2]}>
+    <Canvas
+      camera={{ position: [layout.start.x, 15, layout.start.z + 8], fov: 45 }}
+      dpr={[1, 2]}
+      shadows="percentage"
+    >
       <color attach="background" args={[colors.sky]} />
-      <hemisphereLight args={["#ffffff", "#8a8f99", 1.6]} />
-      <directionalLight position={[8, 16, 6]} intensity={1.4} />
+      <Lights bounds={layout.bounds} />
       <Lobby layout={layout} onPick={pick} onMachine={walkToMachine} />
+      {layout.plants.map((plant, index) => (
+        <Plant key={`${plant.x},${plant.z}`} at={plant} variant={index} />
+      ))}
       <Floor
         layout={layout}
         offices={offices ?? []}

@@ -14,7 +14,7 @@ const indexOf = ({ bounds }: Grid, { x, z }: Cell) => (z - bounds.z) * bounds.w 
 export const isOpen = (grid: Grid, cell: Cell) =>
   contains(grid.bounds, cell) && grid.open[indexOf(grid, cell)] === 1;
 
-/** Open where people can walk: the lobby, the open gate and the floor, minus walls, desks and machines. */
+/** Open where people can walk: the lobby, the open gate and the floor, minus walls, desks, machines and plants. */
 export function buildGrid(layout: WorldLayout): Grid {
   const grid = { bounds: layout.bounds, open: new Uint8Array(layout.bounds.w * layout.bounds.d) };
   const set = (rect: Rect, value: number) =>
@@ -31,6 +31,7 @@ export function buildGrid(layout: WorldLayout): Grid {
     for (const cubicle of office.cubicles) set(cubicle.desk, 0);
   }
   for (const { at } of Object.values(layout.machines)) set({ ...at, w: 1, d: 1 }, 0);
+  for (const plant of layout.plants) set({ ...plant, w: 1, d: 1 }, 0);
   return grid;
 }
 

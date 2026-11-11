@@ -8,7 +8,7 @@ const DEPTH = 0.8;
 export function Desk() {
   return (
     <group>
-      <mesh position={[0, DESK_TOP - 0.025, 0]}>
+      <mesh position={[0, DESK_TOP - 0.025, 0]} castShadow receiveShadow>
         <boxGeometry args={[WIDTH, 0.05, DEPTH]} />
         <meshStandardMaterial color={colors.desk} />
       </mesh>

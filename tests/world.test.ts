@@ -93,6 +93,62 @@ describe("layoutWorld", () => {
   });
 });
 
+describe("plants", () => {
+  const worlds = {
+    "before check-in": layoutWorld(null),
+    "no offices": layoutWorld([]),
+    "an empty office": layoutWorld([office("Ada")]),
+    "one cubicle": layoutWorld([office("Ada", [1])]),
+    // Up to five per office: from six, a full row of desks already shuts off the row behind it,
+    // with or without plants. That is its own fix.
+    "many offices and cubicles": layoutWorld([
+      office("Ada", [1, 2, 3, 4, 5]),
+      office("Bo"),
+      office("Cy", [3]),
+      office("Di", [7]),
+      office("Ed", [1, 5, 9]),
+    ]),
+  };
+
+  for (const [name, world] of Object.entries(worlds)) {
+    it(`stays out of the way and leaves every spot reachable: ${name}`, () => {
+      const grid = buildGrid(world);
+      const cell = (at: Cell): Rect => ({ ...at, w: 1, d: 1 });
+      const keepClear: Rect[] = [
+        world.gate,
+        cell(world.start),
+        ...Object.values(world.machines).flatMap(({ at, spot }) => [cell(at), cell(spot)]),
+        ...world.offices.flatMap((room) => [
+          room.door,
+          cell(room.doorStep),
+          ...room.cubicles.flatMap(({ desk, spot }) => [desk, cell(spot)]),
+        ]),
+      ];
+      const rooms = [world.lobby, ...world.offices.map((room) => room.interior)];
+
+      expect(world.plants.length).toBeGreaterThan(0);
+      for (const plant of world.plants) {
+        for (const clear of keepClear) expect(contains(clear, plant)).toBe(false);
+        expect(rooms.some((room) => contains(room, plant))).toBe(true);
+        expect(isOpen(grid, plant)).toBe(false);
+      }
+
+      const goals = [
+        world.machines.checkIn.spot,
+        world.machines.checkOut.spot,
+        ...world.offices.flatMap((room) => [room.doorStep, ...room.cubicles.map((c) => c.spot)]),
+      ];
+      for (const goal of goals) expect(findPath(grid, world.start, goal)).not.toBeNull();
+    });
+  }
+
+  it("gives every office two, and keeps the lobby's when the floor appears", () => {
+    const world = worlds["many offices and cubicles"];
+    expect(world.plants).toHaveLength(worlds["before check-in"].plants.length + 2 * 5);
+    expect(world.plants).toEqual(expect.arrayContaining(worlds["before check-in"].plants));
+  });
+});
+
 describe("findPath", () => {
   const grid = buildGrid(layoutWorld([office("Ada", [1])]));
 

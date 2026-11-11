@@ -16,7 +16,7 @@ const shorten = (text: string) =>
 function Partitions() {
   return (
     <group>
-      <mesh position={[0, 0.6, -0.47]}>
+      <mesh position={[0, 0.6, -0.47]} castShadow receiveShadow>
         <boxGeometry args={[2.9, 1.2, 0.06]} />
         <meshStandardMaterial color={colors.partition} />
       </mesh>
@@ -25,7 +25,7 @@ function Partitions() {
         <meshStandardMaterial color={colors.partitionTrim} />
       </mesh>
       {[-1.42, 1.42].map((x) => (
-        <mesh key={x} position={[x, 0.5, -0.03]}>
+        <mesh key={x} position={[x, 0.5, -0.03]} castShadow>
           <boxGeometry args={[0.05, 1.0, 0.86]} />
           <meshStandardMaterial color={colors.partition} />
         </mesh>

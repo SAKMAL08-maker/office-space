@@ -18,8 +18,8 @@ export function Lobby({
 }) {
   return (
     <group>
-      <Ground rect={layout.lobby} color={colors.lobbyFloor} onPick={onPick} />
-      <Ground rect={layout.gate} color={colors.lobbyFloor} onPick={onPick} />
+      <Ground rect={layout.lobby} color={colors.lobbyFloor} pattern="tiles" onPick={onPick} />
+      <Ground rect={layout.gate} color={colors.lobbyFloor} pattern="tiles" onPick={onPick} />
       <CheckInMachine at={layout.machines.checkIn.at} onUse={() => onMachine("checkIn")} />
       <CheckOutMachine at={layout.machines.checkOut.at} onUse={() => onMachine("checkOut")} />
       <Gate gate={layout.gate} open={layout.gateOpen} />

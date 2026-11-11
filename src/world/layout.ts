@@ -56,6 +56,8 @@ export type WorldLayout = {
   floor: Rect | null;
   offices: OfficeLayout[];
   walls: Rect[];
+  /** Potted plants. Each fills its cell, so nobody walks through one. */
+  plants: Cell[];
 };
 
 const LOBBY_HALF = 11;
@@ -76,6 +78,15 @@ const MACHINES = {
   checkOut: { at: { x: 6, z: 1 }, spot: { x: 6, z: 2 } },
 };
 const START: Cell = { x: 0, z: 8 };
+/** The lobby's four corners, and one beside each machine on its outer side. */
+const LOBBY_PLANTS: Cell[] = [
+  { x: LOBBY.x, z: LOBBY.z },
+  { x: LOBBY.x + LOBBY.w - 1, z: LOBBY.z },
+  { x: LOBBY.x, z: LOBBY.z + LOBBY.d - 1 },
+  { x: LOBBY.x + LOBBY.w - 1, z: LOBBY.z + LOBBY.d - 1 },
+  { x: MACHINES.checkIn.at.x - 1, z: MACHINES.checkIn.at.z },
+  { x: MACHINES.checkOut.at.x + 1, z: MACHINES.checkOut.at.z },
+];
 
 export const columnsFor = (count: number) =>
   count === 0 ? 0 : Math.min(MAX_COLUMNS, Math.ceil(Math.sqrt(count)));
@@ -118,6 +129,18 @@ function placeOffice(office: OfficeInput, x: number, front: number): OfficeLayou
   };
 }
 
+/**
+ * The two front corners inside an office. Cubicles fill rows from the back, so the aisle by the
+ * door always has these free, and the aisle's second row keeps every cubicle reachable.
+ */
+function officePlants({ interior }: OfficeLayout): Cell[] {
+  const z = interior.z + interior.d - 1;
+  return [
+    { x: interior.x, z },
+    { x: interior.x + interior.w - 1, z },
+  ];
+}
+
 function officeWalls({ outer, door }: OfficeLayout): Rect[] {
   const front = outer.z + outer.d - 1;
   return [
@@ -149,6 +172,7 @@ export function layoutWorld(offices: OfficeInput[] | null): WorldLayout {
     offices: [],
     // The gate is not a wall: it is drawn by itself, and stays shut because it is never opened.
     walls: [...lobbyWalls, ...wallWithGap(-LOBBY_HALF, 0, LOBBY_HALF * 2 + 1, GATE)],
+    plants: LOBBY_PLANTS,
   });
   if (!offices) return lobbyOnly();
 
@@ -192,6 +216,7 @@ export function layoutWorld(offices: OfficeInput[] | null): WorldLayout {
       { x: half, z: topWall + 1, w: 1, d: -1 - topWall },
       ...placed.flatMap(officeWalls),
     ],
+    plants: [...LOBBY_PLANTS, ...placed.flatMap(officePlants)],
   };
 }
 

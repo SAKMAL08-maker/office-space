@@ -53,7 +53,8 @@ export function Label({
 
   return (
     <sprite position={position} scale={[label.width, HEIGHT, 1]} renderOrder={10}>
-      <spriteMaterial map={label.texture} transparent depthTest={false} />
+      {/* Signs stay crisp at any distance: the fog never fades them. */}
+      <spriteMaterial map={label.texture} transparent depthTest={false} fog={false} />
     </sprite>
   );
 }
