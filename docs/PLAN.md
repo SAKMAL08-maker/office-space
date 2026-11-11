@@ -17,6 +17,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 4   | 3D world   | Done        |
 | 5a  | Working    | Done        |
 | 5b  | Presence   | Done        |
+| 5c  | Polish     | In review   |
 | 6   | Backblaze  | Not started |
 | 7   | Hardening  | Not started |
 
@@ -98,6 +99,7 @@ Files stay small and each 3D object is its own component.
 | 4   | 3D world   | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
 | 5a  | Working    | Details panel, start and stop working, occupied indicators, nicer character and furniture, work periods in the time log   |
 | 5b  | Presence   | Other people's characters, updates every 10 seconds, away after 2 minutes, "who's working" list                           |
+| 5c  | Polish     | Shadows and warmer light, patterned floors, finished walls, nicer machines, a swinging gate arm, potted plants            |
 | 6   | Backblaze  | Attachments, profile pictures, CSV exports                                                                                |
 | 7   | Hardening  | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
 
