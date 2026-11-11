@@ -91,6 +91,18 @@ describe("layoutWorld", () => {
     ];
     for (const goal of goals) expect(findPath(grid, world.start, goal)).not.toBeNull();
   });
+
+  it("keeps every cubicle reachable when full rows of desks stand in front of it", () => {
+    // Four full rows: before the side walkways, the front row shut off the three behind it.
+    const seats = Array.from({ length: 12 }, (_, i) => i + 1);
+    const world = layoutWorld([office("Ada", seats), office("Bo", [1, 2, 3, 4, 5, 6])]);
+    const grid = buildGrid(world);
+    for (const room of world.offices) {
+      for (const { seat, spot } of room.cubicles) {
+        expect(findPath(grid, world.start, spot), `${room.name} seat ${seat}`).not.toBeNull();
+      }
+    }
+  });
 });
 
 describe("plants", () => {
@@ -99,10 +111,8 @@ describe("plants", () => {
     "no offices": layoutWorld([]),
     "an empty office": layoutWorld([office("Ada")]),
     "one cubicle": layoutWorld([office("Ada", [1])]),
-    // Up to five per office: from six, a full row of desks already shuts off the row behind it,
-    // with or without plants. That is its own fix.
     "many offices and cubicles": layoutWorld([
-      office("Ada", [1, 2, 3, 4, 5]),
+      office("Ada", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
       office("Bo"),
       office("Cy", [3]),
       office("Di", [7]),
