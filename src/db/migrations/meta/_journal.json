@@ -36,6 +36,13 @@
       "when": 1794360974923,
       "tag": "20261111013614_presence",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794401997828,
+      "tag": "20261111125957_attachments",
+      "breakpoints": true
     }
   ]
 }
