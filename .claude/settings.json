@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Select-Object *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Out-Null)",
+      "PowerShell(npm run format:check)",
+      "PowerShell(npm run lint)",
+      "PowerShell(npm run typecheck)",
+      "mcp__claude_ai_Claude_Docs__read",
+      "PowerShell(Out-String *)",
+      "PowerShell(gh pr checks *)",
+      "mcp__claude_ai_Claude_Docs__guide"
+    ]
+  }
+}
