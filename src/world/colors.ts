@@ -26,6 +26,8 @@ export const colors = {
   eyes: "#1f2937",
   skin: "#f1c9a5",
   marker: "#facc15",
+  awayShirt: "#a1a1aa",
+  awayHair: "#71717a",
 };
 
 /** Shirt and hair colours, picked per person so characters can be told apart. */

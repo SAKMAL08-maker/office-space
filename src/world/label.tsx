@@ -34,6 +34,8 @@ const BACKGROUNDS = {
   own: "#047857",
   /** Someone working right now. */
   working: "#b45309",
+  /** Someone checked in whose tab has gone quiet. */
+  away: "#52525bd9",
 };
 
 /** A floating sign that always faces the camera and is drawn on top, so walls never hide it. */
