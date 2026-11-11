@@ -14,7 +14,7 @@
 
 ## Folder map
 
-- `src/app/`: pages and API routes (`api/health` checks the database)
+- `src/app/`: pages and API routes (`api/health` checks the database; `api/presence` takes each tab's "still here" and spot, behind the gate)
 - `src/db/pool.ts`: the shared Postgres connection. All database access goes through it
 - `src/db/schema.ts`, `src/db/client.ts`, `src/db/migrations/`: tables, typed queries, dated migrations
 - `src/server/`: login setup and account rules (`session.ts` has `requireUser` and `requireAdmin`)
@@ -32,6 +32,7 @@
 - **Attendance:** a record stays open until its owner checks out. Nothing closes it automatically. Log out is only offered after checking out.
 - **Tasks and cubicles:** a task creates a project and its cubicle only when the receiver accepts it, in one transaction. Each active project has exactly one cubicle. At most 10 tasks can be waiting from one sender to one receiver.
 - **Work periods:** only a cubicle's owner can start work there, while checked in, and each person has at most one open period. It ends on Stop working, starting elsewhere, checking out or finishing the project, each in the same transaction. Walking away does not end it.
+- **Presence:** visible tabs report every 10 seconds; 2 minutes of silence shows someone as away. Away never checks anyone out or ends a work period. Only checked-in people are listed.
 - **Files:** Backblaze storage stays private, with short-lived signed links only.
 - **Database changes:** each one is a new dated migration file. Never edit an old migration. Production is changed only by the Migrate production workflow, after the owner has read the SQL.
 - **Accounts:** public sign-up stays off. Accounts come only from `/setup` and invite links. Every admin action calls `requireAdmin()` on the server. Invite and reset links are stored only as hashes.
