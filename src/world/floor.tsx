@@ -8,6 +8,7 @@ export function Floor({
   layout,
   offices,
   viewerId,
+  awayIds,
   onPick,
   onGoTo,
   onSelectCubicle,
@@ -15,6 +16,8 @@ export function Floor({
   layout: WorldLayout;
   offices: OfficeInfo[];
   viewerId: string;
+  /** People checked in whose tabs have gone quiet. */
+  awayIds: ReadonlySet<string>;
   onPick: (point: { x: number; z: number }) => void;
   onGoTo: (cell: Cell) => void;
   onSelectCubicle: (projectId: string) => void;
@@ -30,6 +33,7 @@ export function Floor({
           office={office}
           info={byOwner.get(office.ownerId)}
           viewerId={viewerId}
+          ownerAway={awayIds.has(office.ownerId)}
           onPick={onPick}
           onGoTo={onGoTo}
           onSelectCubicle={onSelectCubicle}

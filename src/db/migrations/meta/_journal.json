@@ -29,6 +29,13 @@
       "when": 1794356401418,
       "tag": "20261111002001_work_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794360974923,
+      "tag": "20261111013614_presence",
+      "breakpoints": true
     }
   ]
 }

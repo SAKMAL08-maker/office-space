@@ -5,7 +5,6 @@ import { type CubicleInfo, type CubicleLayout, rectCentre } from "./layout";
 import { Monitor } from "./monitor";
 import { OfficeChair } from "./office-chair";
 import { clickable } from "./pointer";
-import { SeatedPerson } from "./seated-person";
 import { WorkGlow } from "./work-glow";
 
 const LABEL_LENGTH = 32;
@@ -37,22 +36,21 @@ function Partitions() {
 
 /**
  * One project's cubicle: partitions, a desk, a monitor and a chair on the seat cell in front.
- * While its owner works there, the floor glows, the screen lights up, they sit in the chair, and a
- * label shows their name and the project. Clicking it walks there and opens its details.
+ * While its owner works there, the floor glows, the screen lights up and a label shows their name
+ * and the project, with "away" if their tab has gone quiet. Their character, drawn by the world,
+ * sits in the chair. Clicking it walks there and opens its details.
  */
 export function Cubicle({
   cubicle,
   info,
-  ownerId,
   ownerName,
-  viewerId,
+  ownerAway,
   onUse,
 }: {
   cubicle: CubicleLayout;
   info: CubicleInfo | undefined;
-  ownerId: string;
   ownerName: string;
-  viewerId: string;
+  ownerAway: boolean;
   onUse: () => void;
 }) {
   const desk = rectCentre(cubicle.desk);
@@ -79,12 +77,10 @@ export function Cubicle({
       {/* The chair stands on the seat cell, one cell in front of the desk, facing it. */}
       <group position={[0, 0, 1]}>
         <OfficeChair />
-        {/* The viewer's own character sits here by itself, so only other people are drawn. */}
-        {working && ownerId !== viewerId && <SeatedPerson personId={ownerId} />}
       </group>
       {working && info && (
         <Label
-          text={`${ownerName} · ${shorten(info.title)}`}
+          text={`${ownerName}${ownerAway ? " · away" : ""} · ${shorten(info.title)}`}
           position={[0, 2.1, 0.3]}
           tone="working"
         />

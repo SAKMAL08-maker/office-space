@@ -1,22 +1,30 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useEffectEvent, useMemo, useRef } from "react";
+import { type Ref, useEffect, useEffectEvent, useImperativeHandle, useMemo, useRef } from "react";
 import { CameraRig } from "./camera-rig";
 import { colors } from "./colors";
 import { Floor } from "./floor";
 import { type Cell, layoutWorld, type OfficeInfo, toOfficeInput, type WorldLayout } from "./layout";
 import { Lobby } from "./lobby";
 import { Marker } from "./marker";
+import { OtherPerson } from "./other-person";
 import { buildGrid, findPath, isOpen, nearestOpenCell } from "./path";
+import { type LivePerson, placePeople } from "./people";
 import { createWalker, type MachineKind, type MachineRequest, type Walker } from "./walk";
 import { Walls } from "./walls";
 import { Worker } from "./worker";
+
+/** Lets the page ask where the viewer is, for presence, without the scene re-rendering every frame. */
+export type SpotReader = { read: () => Cell };
 
 export type WorldProps = {
   /** Null before check-in: the server sends no floor until then. */
   offices: OfficeInfo[] | null;
   viewerId: string;
+  /** Everyone checked in, from presence. Null until the first answer arrives. */
+  people: LivePerson[] | null;
+  spotRef: Ref<SpotReader>;
   /** A machine the page's buttons asked for. The character walks there, then uses it. */
   machineRequest: MachineRequest | null;
   onUseMachine: (kind: MachineKind) => void;
@@ -36,6 +44,8 @@ function workingSeat(layout: WorldLayout, offices: OfficeInfo[] | null, viewerId
 export default function World({
   offices,
   viewerId,
+  people,
+  spotRef,
   machineRequest,
   onUseMachine,
   onSelectCubicle,
@@ -50,6 +60,18 @@ export default function World({
   // Someone who reloads while working starts in their chair rather than in the lobby.
   const walker = useRef<Walker>(null);
   if (walker.current === null) walker.current = createWalker(seat ?? layout.start);
+
+  // Where the viewer is heading, or standing, so other people see them walk to the same place.
+  useImperativeHandle(spotRef, () => ({
+    read() {
+      const { goal, position } = walker.current!;
+      return goal ?? { x: Math.round(position.x), z: Math.round(position.z) };
+    },
+  }));
+
+  // Other people only appear once the floor is open, since their spots are on it.
+  const others = layout.floor ? placePeople(layout, offices ?? [], people ?? [], viewerId) : [];
+  const awayIds = new Set(people?.filter((person) => person.away).map((person) => person.id));
 
   function goTo(goal: Cell | null, onArrive?: () => void) {
     const current = walker.current;
@@ -96,6 +118,7 @@ export default function World({
         layout={layout}
         offices={offices ?? []}
         viewerId={viewerId}
+        awayIds={awayIds}
         onPick={pick}
         onGoTo={(cell) => goTo(cell)}
         onSelectCubicle={onSelectCubicle}
@@ -103,6 +126,9 @@ export default function World({
       <Walls walls={layout.walls} />
       <Marker walker={walker} />
       <Worker walker={walker} personId={viewerId} seat={seat} />
+      {others.map((person) => (
+        <OtherPerson key={person.id} person={person} grid={grid} />
+      ))}
       <CameraRig walker={walker} offices={layout.offices} />
     </Canvas>
   );

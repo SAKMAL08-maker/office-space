@@ -79,8 +79,8 @@ Chosen by Claude while building PR 4, 2026-11-10.
 - Offices are ordered by name, in up to 4 columns, with each door facing the lobby. The floor shows at most 200 offices.
 - Name plates and signs are drawn inside the 3D scene with the browser's own font. Signs laid over the page as HTML crashed when leaving the page, and this also avoids loading fonts from other sites.
 - The menu over the scene keeps "Go to check-in machine" and "Go to check-out machine" buttons, which walk the character there. This keeps the machines usable from a keyboard.
-- Browsers that cannot draw 3D get the machines as plain buttons, until the "who's working" list arrives in PR 5b.
-- Your position is not saved. Reloading the page starts you in the lobby. Saving positions belongs with presence in PR 5. Since PR 5a, someone who reloads while working starts in their chair.
+- Browsers that cannot draw 3D get the machines as plain buttons, until the "who's working" list arrives in PR 5b. Done in PR 5b: they also get the "Who's in" list.
+- Your position is not saved. Reloading the page starts you in the lobby. Saving positions belongs with presence in PR 5. Since PR 5a, someone who reloads while working starts in their chair. Since PR 5b, your spot is shared with others while you are checked in, but a reload still starts you in the lobby or your chair.
 - Cubicles show no project names yet. The details panel and labels come in PR 5. Done in PR 5a.
 
 Recommended by Claude in the PR 5 plan and chosen by the owner ("go"), 2026-11-11.
@@ -96,5 +96,24 @@ Chosen by Claude while building PR 5a, 2026-11-11.
 - My projects also has Start working here and Stop working, so browsers without 3D can work too.
 - A floating label shows only over occupied cubicles. Any cubicle shows its details when clicked.
 - An office's name plate reads "Name · working" in amber while its owner works there. A separate badge overlapped the name plate when seen from far away.
-- Until PR 5b, other people's starts and stops show after a page reload. Your own show at once.
+- Until PR 5b, other people's starts and stops show after a page reload. Your own show at once. Done in PR 5b: others' show within 10 seconds.
 - A machine button pressed while the scene is still loading now walks the character once it loads. Before, that press was lost.
+
+Chosen by the owner in the PR 5b plan, 2026-11-11.
+
+- Other people appear at live spots: each open tab sends its grid cell every 10 seconds, and other people walk there. Why: "live spots are better so it's more interactive seeing a live office working with co workers".
+- When a cubicle appears or goes, other people's floors refresh by themselves, without a reload.
+- Someone away shows as a faded grey character where they were last seen, labelled "Name · away".
+
+Chosen by Claude while building PR 5b, 2026-11-11.
+
+- Away is worked out by the database clock, so a wrong clock on someone's computer cannot change it. A spot sent before the latest check-in is ignored.
+- Without a spot, a person is drawn in the chair where they work, else just inside their office door, else in the lobby. A browser without 3D sends no spot.
+- My projects, Inbox and Sent also say "still here", so reading the inbox does not make someone away.
+- The button over the scene is called "Who's in", because the admin's menu already has "People" (the accounts page).
+- At their desk, a person's own name label is hidden: the cubicle's label already names them, and the two overlapped.
+- The viewer's own office keeps the floor's data, not presence's, so their own Start working does not flicker off while presence catches up.
+
+Chosen by the owner after PR 5b, 2026-11-11.
+
+- Claude Code's automatic safety check stays on, and no permission rule lets Claude start production migrations. Why: "it allows me to do manual reviews on actions that causes the check". The owner starts the Migrate production workflow with `!`.

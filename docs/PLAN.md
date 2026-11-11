@@ -15,8 +15,8 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 2   | Attendance | Done        |
 | 3   | Work items | Done        |
 | 4   | 3D world   | Done        |
-| 5a  | Working    | In review   |
-| 5b  | Presence   | Not started |
+| 5a  | Working    | Done        |
+| 5b  | Presence   | In review   |
 | 6   | Backblaze  | Not started |
 | 7   | Hardening  | Not started |
 
@@ -63,7 +63,7 @@ A task is a project offered to someone. It is called a task until the receiver a
 - Finish removes the cubicle and keeps the project. Reopen gives it the owner's lowest free seat.
 
 **Data tables**
-`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `attachments`, `time_exports`.
+`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `presence` (each person's last cell and last-seen time), `attachments`, `time_exports`.
 
 Database rules enforce the key facts: one open attendance per user, one open work session per user, one cubicle per project, one project per task, no seat shared within an office.
 

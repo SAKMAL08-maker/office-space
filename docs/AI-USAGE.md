@@ -16,3 +16,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-10 | Work items: tasks as project offers, inbox, sent list, projects, cubicles, migration, tests    | Claude Code     |
 | 2026-11-10 | 3D world: lobby, machines, gated floor, offices, cubicles, click-to-walk, camera, tests        | Claude Code     |
 | 2026-11-11 | PR 5a Working: details panel, start/stop work, indicators, new character and furniture, tests  | Claude Code     |
+| 2026-11-11 | PR 5b Presence: live spots, other people's characters, away, Who's in list, migration, tests   | Claude Code     |
