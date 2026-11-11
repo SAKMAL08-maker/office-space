@@ -19,7 +19,7 @@ Nothing. This wrap-up docs PR is the only open one. Nothing is half-built.
 ## Next steps
 
 1. Owner tries the live site with two people: log in, walk to the check-in machine, see both offices and name plates, send a task, accept it, see the cubicle appear, walk into an office, then walk to the check-out machine. Also check My time log. None of this is confirmed live yet, and phones and real graphics cards are untested.
-2. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler. Owner's direction after PR 4: the 3D world is a rough skeleton for now, and the focus is on what works. Visual improvements come later, so keep PR 5's 3D plain and say so in its plan.
+2. PR 5 (Cubicles live): details panel, start working, the occupied glow, presence of other people, and the "who's working" list. Cubicles in `src/world/cubicle.tsx` are ready for the glow and a click handler. Owner's direction after PR 4: what works comes first, but visual improvements are welcome when they fit. In each plan, say what the 3D will look like and which visual improvements are included.
 3. For any later migration, show the owner the SQL, get a yes, then run `gh workflow run migrate.yml --ref <branch>` before merging.
 4. Add Playwright to the repo when the first committed browser test is written. It is not installed yet.
 
