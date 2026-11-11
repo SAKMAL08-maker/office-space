@@ -8,16 +8,17 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 
 ## Status
 
-| PR  | Name          | Status      |
-| --- | ------------- | ----------- |
-| 0   | Foundation    | Done        |
-| 1   | Accounts      | Done        |
-| 2   | Attendance    | Done        |
-| 3   | Work items    | Done        |
-| 4   | 3D world      | Done        |
-| 5   | Cubicles live | Not started |
-| 6   | Backblaze     | Not started |
-| 7   | Hardening     | Not started |
+| PR  | Name       | Status      |
+| --- | ---------- | ----------- |
+| 0   | Foundation | Done        |
+| 1   | Accounts   | Done        |
+| 2   | Attendance | Done        |
+| 3   | Work items | Done        |
+| 4   | 3D world   | Done        |
+| 5a  | Working    | In review   |
+| 5b  | Presence   | Not started |
+| 6   | Backblaze  | Not started |
+| 7   | Hardening  | Not started |
 
 ## Owner decisions so far
 
@@ -88,16 +89,17 @@ Files stay small and each 3D object is its own component.
 
 ## Build order (one PR each)
 
-| #   | PR            | Outcome                                                                                                                   |
-| --- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Foundation    | Private GitHub repo `office-space`, `.gitignore`, project `CLAUDE.md`, docs, CI, blank app live on Vercel, Neon connected |
-| 1   | Accounts      | Schema, login, invite links, first admin account, password reset by admin link                                            |
-| 2   | Attendance    | Check-in/out rules, server gate, time log page                                                                            |
-| 3   | Work items    | Projects, tasks, approval inbox, cubicle creation (plain 2D screens)                                                      |
-| 4   | 3D world      | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
-| 5   | Cubicles live | Details panel, start working, indicators, presence, "who's working" list                                                  |
-| 6   | Backblaze     | Attachments, profile pictures, CSV exports                                                                                |
-| 7   | Hardening     | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
+| #   | PR         | Outcome                                                                                                                   |
+| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Foundation | Private GitHub repo `office-space`, `.gitignore`, project `CLAUDE.md`, docs, CI, blank app live on Vercel, Neon connected |
+| 1   | Accounts   | Schema, login, invite links, first admin account, password reset by admin link                                            |
+| 2   | Attendance | Check-in/out rules, server gate, time log page                                                                            |
+| 3   | Work items | Projects, tasks, approval inbox, cubicle creation (plain 2D screens)                                                      |
+| 4   | 3D world   | Lobby, machines, floor, offices, click-to-walk, camera moves                                                              |
+| 5a  | Working    | Details panel, start and stop working, occupied indicators, nicer character and furniture, work periods in the time log   |
+| 5b  | Presence   | Other people's characters, updates every 10 seconds, away after 2 minutes, "who's working" list                           |
+| 6   | Backblaze  | Attachments, profile pictures, CSV exports                                                                                |
+| 7   | Hardening  | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
 
 Logic comes before 3D on purpose: the rules get tested first, and the scene only displays them.
 
