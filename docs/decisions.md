@@ -62,7 +62,7 @@ Chosen by Claude while building PR 2, 2026-11-10.
 Proposed by Claude in the PR 3 plan, with no objection from the owner, 2026-11-10.
 
 - Finishing a project deletes its cubicle row and keeps the project. Reopening gives it the owner's lowest free seat, which may not be its old one.
-- People see only their own tasks and projects until PR 5.
+- People see only their own tasks and projects until PR 5. Since PR 5a, anyone checked in can read any active project's title, description and sender in its cubicle, as the plan says. Tasks and finished projects stay private.
 - Titles can be up to 120 characters, descriptions 2,000 and reject reasons 500.
 
 Chosen by Claude while building PR 3, 2026-11-10.
@@ -79,6 +79,22 @@ Chosen by Claude while building PR 4, 2026-11-10.
 - Offices are ordered by name, in up to 4 columns, with each door facing the lobby. The floor shows at most 200 offices.
 - Name plates and signs are drawn inside the 3D scene with the browser's own font. Signs laid over the page as HTML crashed when leaving the page, and this also avoids loading fonts from other sites.
 - The menu over the scene keeps "Go to check-in machine" and "Go to check-out machine" buttons, which walk the character there. This keeps the machines usable from a keyboard.
-- Browsers that cannot draw 3D get the machines as plain buttons, until the "who's working" list arrives in PR 5.
-- Your position is not saved. Reloading the page starts you in the lobby. Saving positions belongs with presence in PR 5.
-- Cubicles show no project names yet. The details panel and labels come in PR 5.
+- Browsers that cannot draw 3D get the machines as plain buttons, until the "who's working" list arrives in PR 5b.
+- Your position is not saved. Reloading the page starts you in the lobby. Saving positions belongs with presence in PR 5. Since PR 5a, someone who reloads while working starts in their chair.
+- Cubicles show no project names yet. The details panel and labels come in PR 5. Done in PR 5a.
+
+Recommended by Claude in the PR 5 plan and chosen by the owner ("go"), 2026-11-11.
+
+- PR 5 is split in two: 5a Working (details panel, start and stop working, indicators, nicer furniture and character, work periods in the time log) and 5b Presence (other people's characters, updates every 10 seconds, away, the "who's working" list), so each PR stays small enough to review.
+- There is a Stop working button, for breaks, as well as switching cubicles and checking out.
+- Finishing a project ends any work period open on it.
+- My time log shows work periods per project, so the recorded time is visible.
+
+Chosen by Claude while building PR 5a, 2026-11-11.
+
+- Walking away from your desk does not stop work. Only Stop working, starting elsewhere, checking out or finishing the project end a period.
+- My projects also has Start working here and Stop working, so browsers without 3D can work too.
+- A floating label shows only over occupied cubicles. Any cubicle shows its details when clicked.
+- An office's name plate reads "Name · working" in amber while its owner works there. A separate badge overlapped the name plate when seen from far away.
+- Until PR 5b, other people's starts and stops show after a page reload. Your own show at once.
+- A machine button pressed while the scene is still loading now walks the character once it loads. Before, that press was lost.
