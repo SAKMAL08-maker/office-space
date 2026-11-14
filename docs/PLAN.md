@@ -18,7 +18,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 5a  | Working     | Done        |
 | 5b  | Presence    | Done        |
 | 5c  | Polish      | Done        |
-| 6a  | Attachments | In review   |
+| 6a  | Attachments | Done        |
 | 6b  | Pictures    | Not started |
 | 6c  | CSV export  | Not started |
 | 7   | Hardening   | Not started |
