@@ -14,6 +14,7 @@ export function OfficeRoom({
   info,
   viewerId,
   ownerAway,
+  ownerPictureId,
   onPick,
   onGoTo,
   onSelectCubicle,
@@ -22,6 +23,7 @@ export function OfficeRoom({
   info: OfficeInfo | undefined;
   viewerId: string;
   ownerAway: boolean;
+  ownerPictureId: string | null;
   onPick: (point: { x: number; z: number }) => void;
   onGoTo: (cell: Cell) => void;
   onSelectCubicle: (projectId: string) => void;
@@ -71,7 +73,7 @@ export function OfficeRoom({
             key={cubicle.seat}
             cubicle={cubicle}
             info={details}
-            ownerName={office.name}
+            owner={{ id: office.ownerId, name: office.name, pictureId: ownerPictureId }}
             ownerAway={ownerAway}
             onUse={() => {
               onGoTo(cubicle.spot);

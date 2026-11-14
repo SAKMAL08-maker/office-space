@@ -1,3 +1,4 @@
+import { Avatar } from "@/ui/avatar";
 import { mutedTextClass } from "@/ui/form-parts";
 import type { LivePerson } from "@/world/people";
 
@@ -25,10 +26,13 @@ export function PeopleList({
       </h2>
       <ul className="flex max-h-60 flex-col gap-1 overflow-y-auto text-sm">
         {people.map((person) => (
-          <li key={person.id} className="flex flex-wrap items-baseline justify-between gap-x-3">
-            <span className="font-medium break-words">
-              {person.name}
-              {person.id === viewerId && " (you)"}
+          <li key={person.id} className="flex flex-wrap items-center justify-between gap-x-3">
+            <span className="flex min-w-0 items-center gap-2 font-medium break-words">
+              <Avatar userId={person.id} name={person.name} pictureId={person.pictureId} />
+              <span className="min-w-0">
+                {person.name}
+                {person.id === viewerId && " (you)"}
+              </span>
             </span>
             <span
               className={

@@ -1,6 +1,13 @@
 import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { attendanceSessions, presence, projects, users, workSessions } from "@/db/schema";
+import {
+  attendanceSessions,
+  presence,
+  profilePictures,
+  projects,
+  users,
+  workSessions,
+} from "@/db/schema";
 import type { Cell } from "@/world/layout";
 import type { LivePerson } from "@/world/people";
 import { loadFloor } from "./floor";
@@ -59,6 +66,7 @@ export async function listPresence(): Promise<PresencePerson[]> {
       projectId: workSessions.projectId,
       title: projects.title,
       since: workSessions.startedAt,
+      pictureId: profilePictures.id,
     })
     .from(attendanceSessions)
     .innerJoin(users, eq(users.id, attendanceSessions.userId))
@@ -74,13 +82,21 @@ export async function listPresence(): Promise<PresencePerson[]> {
       and(eq(workSessions.userId, attendanceSessions.userId), isNull(workSessions.endedAt)),
     )
     .leftJoin(projects, eq(projects.id, workSessions.projectId))
+    .leftJoin(
+      profilePictures,
+      and(
+        eq(profilePictures.userId, attendanceSessions.userId),
+        eq(profilePictures.status, "ready"),
+      ),
+    )
     .where(isNull(attendanceSessions.checkedOutAt))
     .orderBy(asc(users.name), asc(users.id))
     .limit(PEOPLE_LIMIT);
 
-  return rows.map(({ id, name, x, z, away, projectId, title, since }) => ({
+  return rows.map(({ id, name, x, z, away, projectId, title, since, pictureId }) => ({
     id,
     name,
+    pictureId,
     spot: x !== null && z !== null ? { x, z } : null,
     away,
     workingOn: projectId && title && since ? { projectId, title, since } : null,

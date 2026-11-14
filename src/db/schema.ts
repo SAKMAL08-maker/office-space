@@ -321,3 +321,47 @@ export const attachments = pgTable(
     index("attachments_project_created_idx").on(table.projectId, table.createdAt),
   ],
 );
+
+// A person's profile picture. Like attachments, the file lives in the private bucket under
+// storage_key, and the row stays "pending" until the server has seen it there. Being ready also
+// needs its first bytes to be a PNG, JPEG or WebP, and the type found is kept, never the browser's.
+
+export const MAX_PICTURE_BYTES = 2 * 1024 * 1024;
+export const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+
+export const profilePictures = pgTable(
+  "profile_pictures",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    size: integer("size").notNull(),
+    storageKey: text("storage_key").notNull().unique(),
+    status: text("status", { enum: ["pending", "ready"] })
+      .notNull()
+      .default("pending"),
+    contentType: text("content_type", { enum: PICTURE_TYPES }),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    check("profile_pictures_status_check", sql`${table.status} in ('pending', 'ready')`),
+    check(
+      "profile_pictures_size_check",
+      sql`${table.size} between 1 and ${sql.raw(String(MAX_PICTURE_BYTES))}`,
+    ),
+    check(
+      "profile_pictures_type_check",
+      sql`${table.contentType} in ('image/png', 'image/jpeg', 'image/webp')`,
+    ),
+    // A ready picture always knows its type.
+    check(
+      "profile_pictures_ready_type_check",
+      sql`${table.status} = 'pending' or ${table.contentType} is not null`,
+    ),
+    uniqueIndex("profile_pictures_one_ready_per_user")
+      .on(table.userId)
+      .where(sql`${table.status} = 'ready'`),
+    index("profile_pictures_user_created_idx").on(table.userId, table.createdAt),
+  ],
+);

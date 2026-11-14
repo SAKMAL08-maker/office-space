@@ -4,6 +4,8 @@ import type { Cell, OfficeInfo, WorldLayout } from "./layout";
 export type LivePerson = {
   id: string;
   name: string;
+  /** Their profile picture, or null to show their initials. */
+  pictureId: string | null;
   /** Where they last stood, or null if their tab has not sent a spot since they checked in. */
   spot: Cell | null;
   away: boolean;
@@ -14,6 +16,7 @@ export type LivePerson = {
 export type PlacedPerson = {
   id: string;
   name: string;
+  pictureId: string | null;
   away: boolean;
   /** The cell their character walks to. */
   target: Cell;
@@ -60,12 +63,13 @@ export function placePeople(
 ): PlacedPerson[] {
   return people
     .filter((person) => person.id !== viewerId)
-    .map(({ id, name, away, spot, workingOn }) => {
+    .map(({ id, name, pictureId, away, spot, workingOn }) => {
       const room = layout.offices.find((office) => office.ownerId === id);
       const seatNumber = offices
         .find((office) => office.ownerId === id)
         ?.cubicles.find((cubicle) => cubicle.projectId === workingOn?.projectId)?.seat;
       const seat = room?.cubicles.find((cubicle) => cubicle.seat === seatNumber)?.spot ?? null;
-      return { id, name, away, seat, target: spot ?? seat ?? room?.doorStep ?? layout.start };
+      const target = spot ?? seat ?? room?.doorStep ?? layout.start;
+      return { id, name, pictureId, away, seat, target };
     });
 }

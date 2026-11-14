@@ -30,7 +30,7 @@ function fade(root: Group, away: boolean) {
  * grey and faded where they were last seen, with "away" on their label.
  */
 export function OtherPerson({ person, grid }: { person: PlacedPerson; grid: Grid }) {
-  const { id, name, away, target, seat } = person;
+  const { id, name, pictureId, away, target, seat } = person;
   const { x, z } = target;
   const body = useRef<Group>(null);
   const figure = useRef<Group>(null);
@@ -90,6 +90,7 @@ export function OtherPerson({ person, grid }: { person: PlacedPerson; grid: Grid
           text={away ? `${name} · away` : name}
           position={[0, 1.95, 0]}
           tone={away ? "away" : "plain"}
+          person={{ id, name, pictureId }}
         />
       </group>
     </group>

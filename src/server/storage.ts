@@ -8,7 +8,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // The private Backblaze B2 bucket, reached through its S3-compatible API. Nothing here is public:
-// browsers only ever get links that stop working after LINK_SECONDS.
+// browsers only ever get links that stop working after LINK_SECONDS, or bytes the server passes on.
 
 export const LINK_SECONDS = 5 * 60;
 
@@ -102,6 +102,34 @@ export async function storedSize(key: string): Promise<number | null> {
     return head.ContentLength ?? null;
   } catch (error) {
     if ((error as { name?: string }).name === "NotFound") return null;
+    throw error;
+  }
+}
+
+const isMissing = (error: unknown) => (error as { name?: string }).name === "NoSuchKey";
+
+/** The first few bytes of a stored file, which say what kind of file it really is. Null if missing. */
+export async function readStoredStart(key: string, length: number): Promise<Uint8Array | null> {
+  const { client, bucket } = getStorage();
+  try {
+    const object = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key, Range: `bytes=0-${length - 1}` }),
+    );
+    return object.Body ? await object.Body.transformToByteArray() : null;
+  } catch (error) {
+    if (isMissing(error)) return null;
+    throw error;
+  }
+}
+
+/** The whole stored file as a stream, for the server to pass on. Null if missing. */
+export async function openStored(key: string): Promise<ReadableStream<Uint8Array> | null> {
+  const { client, bucket } = getStorage();
+  try {
+    const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    return object.Body ? object.Body.transformToWebStream() : null;
+  } catch (error) {
+    if (isMissing(error)) return null;
     throw error;
   }
 }
