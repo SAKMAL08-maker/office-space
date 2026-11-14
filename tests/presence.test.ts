@@ -129,7 +129,14 @@ describe.skipIf(!canUseDatabase)("presence", () => {
     const reply = await response.json();
     // Zoe has not checked in, so she is not listed.
     expect(reply.people).toEqual([
-      { id: memberId, name: "Mo", spot: { x: 2, z: -5 }, away: false, workingOn: null },
+      {
+        id: memberId,
+        name: "Mo",
+        pictureId: null,
+        spot: { x: 2, z: -5 },
+        away: false,
+        workingOn: null,
+      },
     ]);
     expect(reply.floorKey).toBe((await getFloor()).key);
   });
@@ -180,7 +187,7 @@ describe.skipIf(!canUseDatabase)("presence", () => {
     await lastSeenSecondsAgo(memberId, 5);
     await checkIn(memberId);
     expect(await listPresence()).toEqual([
-      { id: memberId, name: "Mo", spot: null, away: true, workingOn: null },
+      { id: memberId, name: "Mo", pictureId: null, spot: null, away: true, workingOn: null },
     ]);
   });
 

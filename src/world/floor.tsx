@@ -9,6 +9,7 @@ export function Floor({
   offices,
   viewerId,
   awayIds,
+  pictureIds,
   onPick,
   onGoTo,
   onSelectCubicle,
@@ -18,6 +19,8 @@ export function Floor({
   viewerId: string;
   /** People checked in whose tabs have gone quiet. */
   awayIds: ReadonlySet<string>;
+  /** Each checked-in person's picture, for the signs over their cubicles. */
+  pictureIds: ReadonlyMap<string, string | null>;
   onPick: (point: { x: number; z: number }) => void;
   onGoTo: (cell: Cell) => void;
   onSelectCubicle: (projectId: string) => void;
@@ -34,6 +37,7 @@ export function Floor({
           info={byOwner.get(office.ownerId)}
           viewerId={viewerId}
           ownerAway={awayIds.has(office.ownerId)}
+          ownerPictureId={pictureIds.get(office.ownerId) ?? null}
           onPick={onPick}
           onGoTo={onGoTo}
           onSelectCubicle={onSelectCubicle}

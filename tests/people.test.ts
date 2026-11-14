@@ -24,6 +24,7 @@ const offices: OfficeInfo[] = [
 const person = (id: string, extra: Partial<LivePerson> = {}): LivePerson => ({
   id,
   name: id,
+  pictureId: null,
   spot: null,
   away: false,
   workingOn: null,
@@ -82,10 +83,31 @@ describe("placePeople", () => {
     );
     const chair = room("ada").cubicles.find((c) => c.seat === 2)!.spot;
     expect(placed).toEqual([
-      { id: "ada", name: "ada", away: false, target: { x: 3, z: 4 }, seat: chair },
-      { id: "bo", name: "bo", away: true, target: room("bo").doorStep, seat: null },
-      { id: "cy", name: "cy", away: false, target: room("cy").doorStep, seat: null },
-      { id: "newcomer", name: "newcomer", away: false, target: layout.start, seat: null },
+      { id: "ada", name: "ada", pictureId: null, away: false, target: { x: 3, z: 4 }, seat: chair },
+      {
+        id: "bo",
+        name: "bo",
+        pictureId: null,
+        away: true,
+        target: room("bo").doorStep,
+        seat: null,
+      },
+      {
+        id: "cy",
+        name: "cy",
+        pictureId: null,
+        away: false,
+        target: room("cy").doorStep,
+        seat: null,
+      },
+      {
+        id: "newcomer",
+        name: "newcomer",
+        pictureId: null,
+        away: false,
+        target: layout.start,
+        seat: null,
+      },
     ]);
 
     const noSpot = placePeople(layout, offices, [person("ada", { workingOn: working })], "viewer");

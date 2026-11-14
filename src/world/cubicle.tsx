@@ -1,6 +1,6 @@
 import { colors } from "./colors";
 import { Desk } from "./desk";
-import { Label } from "./label";
+import { Label, type SignPerson } from "./label";
 import { type CubicleInfo, type CubicleLayout, rectCentre } from "./layout";
 import { Monitor } from "./monitor";
 import { OfficeChair } from "./office-chair";
@@ -43,13 +43,13 @@ function Partitions() {
 export function Cubicle({
   cubicle,
   info,
-  ownerName,
+  owner,
   ownerAway,
   onUse,
 }: {
   cubicle: CubicleLayout;
   info: CubicleInfo | undefined;
-  ownerName: string;
+  owner: SignPerson;
   ownerAway: boolean;
   onUse: () => void;
 }) {
@@ -80,9 +80,10 @@ export function Cubicle({
       </group>
       {working && info && (
         <Label
-          text={`${ownerName}${ownerAway ? " · away" : ""} · ${shorten(info.title)}`}
+          text={`${owner.name}${ownerAway ? " · away" : ""} · ${shorten(info.title)}`}
           position={[0, 2.1, 0.3]}
           tone="working"
+          person={owner}
         />
       )}
     </group>

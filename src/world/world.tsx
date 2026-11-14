@@ -74,6 +74,7 @@ export default function World({
   // Other people only appear once the floor is open, since their spots are on it.
   const others = layout.floor ? placePeople(layout, offices ?? [], people ?? [], viewerId) : [];
   const awayIds = new Set(people?.filter((person) => person.away).map((person) => person.id));
+  const pictureIds = new Map(people?.map((person) => [person.id, person.pictureId]));
 
   function goTo(goal: Cell | null, onArrive?: () => void) {
     const current = walker.current;
@@ -127,6 +128,7 @@ export default function World({
         offices={offices ?? []}
         viewerId={viewerId}
         awayIds={awayIds}
+        pictureIds={pictureIds}
         onPick={pick}
         onGoTo={(cell) => goTo(cell)}
         onSelectCubicle={onSelectCubicle}

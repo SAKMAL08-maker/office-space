@@ -1,12 +1,14 @@
-import { asc } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getDb } from "@/db/client";
-import { users } from "@/db/schema";
+import { profilePictures, users } from "@/db/schema";
 import { listPendingInvites } from "@/server/invites";
 import { requireAdmin } from "@/server/session";
+import { ActionButton } from "@/ui/action-button";
+import { Avatar } from "@/ui/avatar";
 import { Loading, quietButtonClass } from "@/ui/form-parts";
-import { revokeInviteAction } from "./actions";
+import { removePictureAction, revokeInviteAction } from "./actions";
 import { InviteForm } from "./invite-form";
 import { ResetLinkForm } from "./reset-link-form";
 
@@ -14,8 +16,18 @@ async function PeopleContent() {
   await requireAdmin();
   const [people, pending] = await Promise.all([
     getDb()
-      .select({ id: users.id, name: users.name, email: users.email, role: users.role })
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        pictureId: profilePictures.id,
+      })
       .from(users)
+      .leftJoin(
+        profilePictures,
+        and(eq(profilePictures.userId, users.id), eq(profilePictures.status, "ready")),
+      )
       .orderBy(asc(users.name)),
     listPendingInvites(),
   ]);
@@ -60,13 +72,30 @@ async function PeopleContent() {
               key={person.id}
               className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
             >
-              <div className="min-w-0">
-                <p className="font-medium">{person.name}</p>
-                <p className="text-sm break-all text-zinc-600 dark:text-zinc-400">
-                  {person.email}, {person.role}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar
+                  userId={person.id}
+                  name={person.name}
+                  pictureId={person.pictureId}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <p className="font-medium break-words">{person.name}</p>
+                  <p className="text-sm break-all text-zinc-600 dark:text-zinc-400">
+                    {person.email}, {person.role}
+                  </p>
+                </div>
               </div>
-              <ResetLinkForm userId={person.id} />
+              <div className="flex flex-wrap items-start gap-2">
+                <ResetLinkForm userId={person.id} />
+                {person.pictureId && (
+                  <ActionButton
+                    action={removePictureAction}
+                    id={person.id}
+                    label="Remove picture"
+                  />
+                )}
+              </div>
             </li>
           ))}
         </ul>

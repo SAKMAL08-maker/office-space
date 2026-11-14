@@ -20,3 +20,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-11 | PR 5c Visual polish: shadows, floor patterns, walls, machines, swinging gate, plants, tests    | Claude Code     |
 | 2026-11-11 | Fix: side walkways in each office so full rows of desks never block cubicles, tests            | Claude Code     |
 | 2026-11-11 | PR 6a Attachments: project files in a private Backblaze bucket, signed links, migration, tests | Claude Code     |
+| 2026-11-14 | PR 6b Pictures: profile pictures checked by first bytes, initials, 3D signs, migration, tests  | Claude Code     |
