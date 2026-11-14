@@ -19,7 +19,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 5b  | Presence    | Done        |
 | 5c  | Polish      | Done        |
 | 6a  | Attachments | Done        |
-| 6b  | Pictures    | Not started |
+| 6b  | Pictures    | In review   |
 | 6c  | CSV export  | Not started |
 | 7   | Hardening   | Not started |
 
@@ -66,7 +66,7 @@ A task is a project offered to someone. It is called a task until the receiver a
 - Finish removes the cubicle and keeps the project. Reopen gives it the owner's lowest free seat.
 
 **Data tables**
-`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `presence` (each person's last cell and last-seen time), `attachments`.
+`users`, auth tables, `invites`, `tasks` (with `status`), `projects`, `cubicles` (owner, project, seat number), `attendance_sessions`, `work_sessions`, `presence` (each person's last cell and last-seen time), `attachments`, `profile_pictures`.
 
 Database rules enforce the key facts: one open attendance per user, one open work session per user, one cubicle per project, one project per task, no seat shared within an office.
 
@@ -103,7 +103,7 @@ Files stay small and each 3D object is its own component.
 | 5b  | Presence    | Other people's characters, updates every 10 seconds, away after 2 minutes, "who's working" list                           |
 | 5c  | Polish      | Shadows and warmer light, patterned floors, finished walls, nicer machines, a swinging gate arm, potted plants            |
 | 6a  | Attachments | Project files in Backblaze: owner and sender upload and download through short-lived links                                |
-| 6b  | Pictures    | Profile pictures in Backblaze (PNG, JPEG or WebP, 2 MB)                                                                   |
+| 6b  | Pictures    | Profile pictures in Backblaze (PNG, JPEG or WebP, 2 MB), shown on pages and on the 3D name signs                          |
 | 6c  | CSV export  | Admins download the time log as a CSV, built on the spot (no storage)                                                     |
 | 7   | Hardening   | Login rate limits, protection against traffic floods, phone layout, security review, full browser test run                |
 

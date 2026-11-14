@@ -48,6 +48,21 @@ Proposed by Claude in PR 6a, 2026-11-11, and confirmed by the owner, 2026-11-12.
 - At most 20 files per project. Upload and download links work for 5 minutes. An upload not finished within an hour is cleared away.
 - Files can only be added once a task is accepted, so a waiting task has no files.
 
+Proposed by Claude in the PR 6b plan and chosen by the owner ("go and apply your recommendations"), 2026-11-14.
+
+- The browser crops a chosen picture to a square and shrinks it to a 256 x 256 JPEG before upload. This leaves hidden details such as a phone photo's location behind, and keeps pictures small.
+- Being logged in is enough to set or see pictures; checking in is not needed. The Who's in list and the 3D office stay behind the gate.
+- Admins can remove anyone's picture on the People page.
+- Pictures show on the 3D name signs now: over other people's characters and over a working cubicle.
+
+Chosen by Claude while building PR 6b, 2026-11-14, for the owner to confirm in review.
+
+- Pictures are sent through the app's own address, not a bucket link, so browsers keep each one and the 3D signs can draw it. Each new picture has a new id.
+- The app's `users.image` column is not used: the login library lets a person set it to any web address.
+- People without a picture show their initials on a circle in their character's shirt colour, in black or white letters, whichever reads better.
+- The file chosen may be up to 20 MB, because it is shrunk to about 30 KB before upload. The server still refuses anything over 2 MB.
+- Replacing a picture deletes the old one. At most 3 uploads can be on the way at once, and one not finished within 10 minutes is cleared away.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.

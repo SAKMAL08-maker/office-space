@@ -1,4 +1,4 @@
-# Handoff — 2026-11-12
+# Handoff — 2026-11-14
 
 ## Where things stand
 
@@ -6,16 +6,18 @@ PRs 0 to 5c, the cubicle-row fix and **PR 6a Attachments** are merged; the app i
 
 People can log in, check in and out, send and answer tasks, and manage projects in a 3D office with presence (see `docs/PLAN.md`). New in 6a: a project's owner and its task's sender can attach files (25 MB, 20 per project) on My projects and Sent. The browser uploads straight to the private Backblaze bucket through a 5-minute link signed for the exact size and download-only headers; the server checks the size before marking the file ready. Downloads go through `/api/attachments/<id>`, which checks the gate and access and redirects to a fresh 5-minute link. Code: `src/server/storage.ts` (only code that talks to Backblaze), `src/server/attachments.ts` (rules), `src/app/attachments/`.
 
-`requireCheckedIn()` guards every office action, page and API route. **Every later office action must call it too.**
+**PR 6b Profile pictures** is built on branch `feat/profile-pictures` and waiting for review (see In progress). It adds a My profile page where people choose or remove their picture. The browser crops it to a square and shrinks it to a 256 x 256 JPEG, then uploads it to the bucket like an attachment. The server keeps a picture only once its first bytes prove PNG, JPEG or WebP. Pictures, or initials on the person's shirt colour, show in the greeting, Who's in, the admin People page (with Remove picture) and on the 3D name signs. They are sent through `/api/pictures/<id>` to anyone logged in, with the type the server found and `nosniff`. Code: `src/server/pictures.ts`, `src/app/profile/`, `src/app/api/pictures/`, `src/ui/avatar.tsx`, `src/world/label.tsx`.
+
+`requireCheckedIn()` guards every office action, page and API route. **Every later office action must call it too.** Account things (time log, profile, pictures) need only `requireUser()`.
 
 ## In progress
 
-- This wrap-up: branch `docs/wrap-up-attachments` (handoff, session log, decisions fix), as its own small docs PR.
-- PR #21 (`chore/allow-read-only-commands`): lets common read-only commands run without a prompt. Open, waiting for the owner.
+- **PR 6b** on `feat/profile-pictures`, waiting for the owner. Its migration `20261114032929_profile_pictures.sql` (one new table, nothing else changed) must run on production **before** the merge, through the Migrate production workflow.
+- PR #21 (`chore/allow-read-only-commands`) shows as closed without merging on 2026-11-14.
 
 ## Next steps
 
-1. **PR 6b profile pictures:** PNG, JPEG or WebP only, 2 MB, checked by their first bytes (no SVG); same bucket and keys. Plan first, with the expected look.
+1. PR 6b: the owner reviews, runs the migration, says "merge it", then uploads a picture on the live site.
 2. PR 6c CSV export: admins download the time log as a CSV built on the spot (no storage, no table).
 3. Then PR 7 hardening. Add Playwright to the repo with the first committed browser test.
 4. Still open from before: the owner's live check of the 5c look, the gate swing, an office with 6 or more projects, and a real phone.
@@ -30,6 +32,9 @@ People can log in, check in and out, send and answer tasks, and manage projects 
 
 ## Verified vs. not
 
+- Tested (PR 6b, not yet live): 170 Vitest tests in 16 files against a throwaway Postgres (bucket faked, holding real bytes), plus lint, format, typecheck and build. Against the real bucket from a local server, 14 checks passed: a 900 x 600 PNG became a 256 x 256 JPEG of 3,833 bytes with no Exif block, stored as download-only bytes; the picture address sent the same bytes with `image/jpeg`, `nosniff` and the sandbox policy; logged-out visitors were sent to log in; HTML sent in place of the JPEG was refused by its first bytes and the old picture stayed; replacing deleted the old file and its address answered 404; a record whose file was missing answered 404; Remove and the admin's Remove picture deleted record and file; no test files were left in the bucket. Each picture was fetched once over 12 seconds of presence updates.
+- Rendered (real local server, test accounts): My profile, the greeting, Who's in, admin People, and the 3D signs (cubicle, standing, away) at desktop and phone width.
+- Not verified for 6b: Safari and iPhone photos (HEIC is converted by the phone when the picker asks for JPEG, not checked), a very large photo on a slow phone, the live site.
 - Tested (PR 6a): 147 Vitest tests in 15 files against a throwaway Postgres (bucket faked in tests), plus lint, format, typecheck, build, and CI on #22. Against the real bucket from a local server, 11 checks passed: upload marked ready, stored as download-only bytes, same bytes back under the original name, unsigned and expired links refused (401), bigger-than-signed and web-page-type uploads refused (403), the live site's address allowed and others refused, Remove deletes record and file.
 - Live: the owner's image upload (40,200 bytes, stored as a JPEG) and its download through the app.
 - Not verified: a 25 MB file, a slow connection, files on Sent between two real accounts. The very first local upload stuck on "Uploading…" for over 20 seconds right after the CORS rule was saved; later runs took about 3 seconds. Cause not found.
