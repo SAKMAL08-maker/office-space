@@ -14,7 +14,7 @@
 
 ## Folder map
 
-- `src/app/`: pages and API routes (`api/health` checks the database; `api/presence` takes each tab's "still here" and spot, behind the gate; `api/pictures/<id>` sends a profile picture to anyone logged in; `profile/` is where people change their own picture)
+- `src/app/`: pages and API routes (`api/health` checks the database; `api/presence` takes each tab's "still here" and spot, behind the gate; `api/pictures/<id>` sends a profile picture to anyone logged in; `profile/` is where people change their own picture; `admin/time-log/csv` sends admins the whole time log as a CSV, built from `src/server/time-export.ts`)
 - `src/db/pool.ts`: the shared Postgres connection. All database access goes through it
 - `src/db/schema.ts`, `src/db/client.ts`, `src/db/migrations/`: tables, typed queries, dated migrations
 - `src/server/`: login setup and account rules (`session.ts` has `requireUser` and `requireAdmin`). `storage.ts` is the only code that talks to Backblaze; `attachments.ts` decides who may upload, see and remove project files; `pictures.ts` does the same for profile pictures

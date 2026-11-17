@@ -20,7 +20,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 5c  | Polish      | Done        |
 | 6a  | Attachments | Done        |
 | 6b  | Pictures    | Done        |
-| 6c  | CSV export  | Not started |
+| 6c  | CSV export  | In review   |
 | 7   | Hardening   | Not started |
 
 ## Owner decisions so far

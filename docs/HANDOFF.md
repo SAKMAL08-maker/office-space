@@ -1,4 +1,4 @@
-# Handoff — 2026-11-14
+# Handoff — 2026-11-17
 
 ## Where things stand
 
@@ -10,13 +10,13 @@ People can log in, check in and out, send and answer tasks, manage projects in a
 
 ## In progress
 
-- This wrap-up: branch `docs/wrap-up-pictures` (handoff, session log, plan status), as its own small docs PR.
+- **PR 6c CSV export**, branch `feat/time-log-csv`, waiting for the owner's review. Everyone's time log has a Download CSV button. `GET /admin/time-log/csv?tz=<zone>` calls `requireAdmin()`, reads every record oldest first (`listTimeLogForExport()` in `src/server/attendance.ts`), and builds the file in `src/server/time-export.ts`: Name, Email, Checked in, Checked out, Minutes, in the browser's time zone, every cell quoted, formula starts made safe with `'`, a UTF-8 mark first. Nothing is stored and there is no migration.
 - PR #21 (`chore/allow-read-only-commands`) shows as closed without merging.
 
 ## Next steps
 
 1. Owner: on the live site, choose a picture on My profile and check it in the greeting and Who's in.
-2. PR 6c CSV export: admins download the time log as a CSV built on the spot (no storage, no table).
+2. Owner: review and merge PR 6c. Then download the CSV on the live site and open it in a spreadsheet.
 3. Then PR 7 hardening. Add Playwright to the repo with the first committed browser test.
 4. Still open from before: the owner's live check of the 5c look, the gate swing, an office with 6 or more projects, and a real phone.
 
@@ -30,6 +30,7 @@ People can log in, check in and out, send and answer tasks, manage projects in a
 
 ## Verified vs. not
 
+- Tested (6c): 181 Vitest tests in 17 files against a throwaway Postgres, none skipped (11 new: cell quoting, formula guard, time zones and fallback, file name date, the whole file, logged-out sent to log in, member 404, admin gets every record past the page's 200), plus lint, format, typecheck and build. Rendered from a local server with a throwaway database at desktop and phone width; the real button downloaded `time-log-2026-11-17.csv` with Manila times, the formula guard and the UTF-8 mark. Not verified: opening it in Excel or Google Sheets, the live site, Safari.
 - Tested (6b): 170 Vitest tests in 16 files against a throwaway Postgres (bucket faked with real bytes), lint, format, typecheck, build, and CI on #24. Real bucket from a local server, 14 checks passed: shrunk to a 256 x 256 JPEG with no Exif block, stored download-only, same bytes served with safe headers, logged-out sent to log in, HTML posing as the JPEG refused, replace and both removes delete the file, a missing file answers 404, nothing left in the bucket. Each picture fetched once over 12 seconds of presence updates.
 - Rendered (local server, test accounts): My profile, greeting, Who's in, admin People, the 3D signs (cubicle, standing, away) at desktop and phone width.
 - Not verified: a live picture upload, Safari, iPhone photos (HEIC), a big photo on a slow phone. From 6a: a 25 MB file, a slow connection, files on Sent between two real accounts. From before: real phones and graphics cards, many people at once, two tabs of one person, invite and reset links live.
@@ -39,7 +40,7 @@ People can log in, check in and out, send and answer tasks, manage projects in a
 - **Production migrations run from the PR branch:** `gh workflow run migrate.yml --ref <PR branch>`, before merging. Run without `--ref` it uses `main`, which lacks the new file, and still says "migrations applied successfully" (that happened once on 2026-11-14 and changed nothing).
 - **Permission prompts:** `.claude/settings.local.json` allows `git *`, `npm *`, `gh pr *` and a few more by prefix, so run those as separate simple commands. Batch only what no rule covers.
 - **Backblaze:** keys have no name or extension, so a file downloaded inside Backblaze won't open until renamed. `.env.local` holds only the four `B2_` settings; Claude never reads it, only passes it with `node --env-file` (`next start` loads it by itself). Local bucket tests must use port 3000 (the CORS rule allows `http://localhost:3000`). A real-bucket run once timed out reaching Backblaze; rerunning worked.
-- Local browser tests: `embedded-postgres` and Playwright in the job's temp folder (gone after the session), Postgres on port 54339, `channel: "msedge"`. Wait for `networkidle` before filling forms; on the 3D home page use `load` instead, since link prefetching keeps the network busy. `/setup` needs a `SETUP_TOKEN` of 24+ characters.
+- Local browser tests: `embedded-postgres` and Playwright in the job's temp folder (gone after the session), Postgres on port 54339, `channel: "msedge"`. Installing them asks the owner first. Port 3000 may already be the owner's own server; use 3001 for checks that skip the bucket. Stopping a background `npx next start` leaves the node process holding the port, so stop that process by its port too. Wait for `networkidle` (plus a moment for the page to become interactive) before filling forms; on the 3D home page use `load` instead, since link prefetching keeps the network busy. `/setup` needs a `SETUP_TOKEN` of 24+ characters.
 - Working copies use Windows line endings (`core.autocrlf`); edit scripts must expect `\r\n` or the match fails. `gh pr create` needs `--body-file`. Vercel reports deploys as commit statuses (context `Vercel`).
 - Account tests empty every table: only on a database whose name ends in `_test`. 3D: walkers move inside `useFrame`; avoid HTML inside the canvas; three r187 needs `shadows="percentage"`.
 - Never run `vercel env pull`. Secrets never go in the chat.
