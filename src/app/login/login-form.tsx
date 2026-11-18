@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { authClient } from "@/ui/auth-client";
 import { buttonClass, Field, FormError, inputClass } from "@/ui/form-parts";
+import { tooManyTries } from "@/ui/form-state";
 
 export function LoginForm() {
   const [error, setError] = useState<string>();
@@ -14,16 +15,23 @@ export function LoginForm() {
     setPending(true);
     setError(undefined);
 
-    const result = await authClient.signIn.email({
-      email: String(form.get("email")),
-      password: String(form.get("password")),
-    });
+    // The server says how long to wait in the X-Retry-After header.
+    const wait = { seconds: 60 };
+    const result = await authClient.signIn.email(
+      { email: String(form.get("email")), password: String(form.get("password")) },
+      {
+        onError: (context) => {
+          const seconds = Number(context.response.headers.get("X-Retry-After"));
+          if (Number.isInteger(seconds) && seconds > 0) wait.seconds = seconds;
+        },
+      },
+    );
 
     if (result.error) {
       setPending(false);
       setError(
         result.error.status === 429
-          ? "Too many tries. Wait a minute and try again."
+          ? tooManyTries(wait.seconds)
           : "That email or password is not right.",
       );
       return;

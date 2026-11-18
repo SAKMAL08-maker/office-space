@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
+import { TRIES_PER_WINDOW, TRY_WINDOW_SECONDS } from "./rate-limit";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./validation";
 
 /** The address of this deployment. Links are built from it, never from a request's Host header. */
@@ -51,6 +52,15 @@ function createAuth() {
       "/send-verification-email",
       "/verify-email",
     ],
+    rateLimit: {
+      // On everywhere, not only in production, so tests and local runs behave like the live site.
+      enabled: true,
+      // Kept in the database: Vercel runs several copies of the app, and memory is not shared.
+      storage: "database",
+      customRules: {
+        "/sign-in/*": { window: TRY_WINDOW_SECONDS, max: TRIES_PER_WINDOW },
+      },
+    },
     user: {
       additionalFields: {
         // input: false means a browser can never set this field.

@@ -25,7 +25,7 @@ export function stubAuthEnv() {
 
 export async function emptyDatabase() {
   await getDb().execute(
-    sql`truncate users, sessions, accounts, verifications, invites, password_reset_links cascade`,
+    sql`truncate users, sessions, accounts, verifications, invites, password_reset_links, rate_limits cascade`,
   );
 }
 
