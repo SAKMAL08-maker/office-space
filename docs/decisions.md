@@ -63,6 +63,18 @@ Chosen by Claude while building PR 6b, 2026-11-14, for the owner to confirm in r
 - The file chosen may be up to 20 MB, because it is shrunk to about 30 KB before upload. The server still refuses anything over 2 MB.
 - Replacing a picture deletes the old one. At most 3 uploads can be on the way at once, and one not finished within 10 minutes is cleared away.
 
+Proposed by Claude in the PR 6c plan and chosen by the owner ("go and apply your recommendations"), 2026-11-17.
+
+- The CSV shows times in the admin's own time zone, which the browser sends with the download and the column headers name. An unknown time zone falls back to UTC.
+- The CSV holds every record, all time, oldest first. There is no date filter. A response over Vercel's 4.5 MB limit (roughly 40,000 records) would need one.
+- The CSV holds check-ins and check-outs only, not work periods.
+
+Chosen by Claude while building PR 6c, 2026-11-17, for the owner to confirm in review.
+
+- Columns: Name, Email, Checked in, Checked out, Minutes. A record still open has blank Checked out and Minutes.
+- A cell starting with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, so a spreadsheet shows it as text instead of running it as a formula.
+- The download needs an admin, not a check-in, like the Everyone's time log page it sits on.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { attendanceSessions, users } from "@/db/schema";
 import { lockUser } from "./users";
@@ -70,4 +70,13 @@ export function listEveryonesTimeLog() {
     .innerJoin(users, eq(users.id, attendanceSessions.userId))
     .orderBy(desc(attendanceSessions.checkedInAt))
     .limit(TIME_LOG_LIMIT);
+}
+
+/** Every record, oldest first, for the CSV download. No limit: the file is the whole log. */
+export function listTimeLogForExport() {
+  return getDb()
+    .select({ ...timeLogColumns, name: users.name, email: users.email })
+    .from(attendanceSessions)
+    .innerJoin(users, eq(users.id, attendanceSessions.userId))
+    .orderBy(asc(attendanceSessions.checkedInAt), asc(attendanceSessions.id));
 }
