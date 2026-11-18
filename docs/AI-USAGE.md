@@ -23,3 +23,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-14 | PR 6b Pictures: profile pictures checked by first bytes, initials, 3D signs, migration, tests        | Claude Code     |
 | 2026-11-17 | PR 6c CSV export: admins download the whole time log in their time zone, formula-safe, tests         | Claude Code     |
 | 2026-11-18 | PR 7 plan, and PR 7a login limits: 5 tries a minute per IP, counts in the database, migration, tests | Claude Code     |
+| 2026-11-18 | PR 7b Floods: researched the free plan's Firewall, wrote the rule and its dashboard steps            | Claude Code     |

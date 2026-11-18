@@ -22,7 +22,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 6b  | Pictures        | Done        |
 | 6c  | CSV export      | Done        |
 | 7a  | Login limits    | Done        |
-| 7b  | Floods          | Not started |
+| 7b  | Floods          | Done        |
 | 7c  | Phone layout    | Not started |
 | 7d  | Browser tests   | Not started |
 | 7e  | Security review | Not started |
@@ -110,7 +110,7 @@ Files stay small and each 3D object is its own component.
 | 6b  | Pictures        | Profile pictures in Backblaze (PNG, JPEG or WebP, 2 MB), shown on pages and on the 3D name signs                          |
 | 6c  | CSV export      | Admins download the time log as a CSV, built on the spot (no storage)                                                     |
 | 7a  | Login limits    | 5 tries a minute per IP address at login, setup, invite and reset, counted in the database                                |
-| 7b  | Floods          | A Vercel Firewall rate-limit rule, or a small limit in code if the plan lacks one                                         |
+| 7b  | Floods          | One Vercel Firewall rule: logged-out pages, 60 requests a minute per IP, 429 (see `docs/firewall.md`)                     |
 | 7c  | Phone layout    | Every page at phone width, the 3D office fitted to a narrow screen, tap to walk                                           |
 | 7d  | Browser tests   | Playwright in the repo and in CI, with a first test: log in, check in, walk, check out                                    |
 | 7e  | Security review | A review of the whole app, findings picked by the owner and fixed in their own PRs                                        |

@@ -22,7 +22,7 @@
 - `src/world/`: the 3D office. `layout.ts` places everything on a grid of one-metre cells, `path.ts` finds walks, and each 3D object has its own small component. The floor data comes from `src/server/floor.ts`, which checks the gate itself
 - `scripts/set-bucket-cors.mjs`: lets the site's browsers upload to the bucket. Run once per site address
 - `tests/`: Vitest tests
-- `docs/`: plan, handoff, decisions, AI usage and session log
+- `docs/`: plan, handoff, decisions, AI usage and session log; `firewall.md` records the Vercel Firewall rule
 - `.github/workflows/ci.yml`: CI, with a real Postgres service
 - `.github/workflows/migrate.yml`: applies migrations to production, started by hand
 
@@ -36,10 +36,11 @@
 - **Presence:** visible tabs report every 10 seconds; 2 minutes of silence shows someone as away. Away never checks anyone out or ends a work period. Only checked-in people are listed.
 - **Files:** Backblaze storage stays private, with short-lived signed links only. A project's files are for its owner and its sender. Uploads stay "pending" until the server has seen the file in the bucket at the promised size, and are always stored to download, never to open in the page. Profile pictures are the one thing shown in the page: only through `api/pictures/<id>`, only once their first bytes prove PNG, JPEG or WebP, and only with the type the server found plus `nosniff` and a sandbox policy. Anyone logged in may see them; each person changes their own, and admins may remove any.
 - **Rate limits:** login, setup, invite and reset allow 5 tries a minute per IP address, counted in the `rate_limits` table so every server copy shares them. Any new form that can be used without logging in must call `takeFormTry()`.
+- **Flood protection:** one Vercel Firewall rule limits the logged-out pages (`/login`, `/setup`, `/invite`, `/reset`, `/api/auth`) to 60 requests a minute per IP. It lives in the dashboard and is recorded in `docs/firewall.md`. Any new page or route usable without logging in must be added to it, and logged-in routes such as `/api/presence` must never match it.
 - **Database changes:** each one is a new dated migration file. Never edit an old migration. Production is changed only by the Migrate production workflow, after the owner has read the SQL.
 - **Accounts:** public sign-up stays off. Accounts come only from `/setup` and invite links. Every admin action calls `requireAdmin()` on the server. Invite and reset links are stored only as hashes.
 - **3D assets:** original shapes built in code. Each 3D object is its own small component.
 
 ## Hosting
 
-Vercel for the app, Neon Postgres through the Vercel integration, Backblaze B2 for files. Deploys come from `main`. Merge only when the owner says so.
+Vercel for the app (free plan, with one Firewall rate-limit rule), Neon Postgres through the Vercel integration, Backblaze B2 for files. Deploys come from `main`. Merge only when the owner says so.

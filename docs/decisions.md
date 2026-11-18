@@ -91,6 +91,14 @@ Chosen by Claude while building PR 7a, 2026-11-18, for the owner to confirm in r
 - A refused visitor waits a full minute from their last allowed try. Refused tries do not make the wait longer.
 - Limits are on in every environment, including local runs and tests, so they behave like the live site.
 
+Recommended by Claude in the PR 7b plan and chosen by the owner ("go with your recommendation"), 2026-11-18.
+
+- Flood protection is one Vercel Firewall rate-limit rule, because the free plan includes one. No limit in code.
+- The rule covers only the logged-out pages (`/login`, `/setup`, `/invite`, `/reset`, `/api/auth`), so `/api/presence` and every logged-in page are never blocked.
+- 60 requests a minute per IP address, answered with 429. Challenge was ruled out because login and logout are sent by the page's own code, which cannot show a browser challenge.
+- The owner turns the rule on in the dashboard, following the steps in `docs/firewall.md`.
+- Logged-in routes stay without a Firewall limit; this is looked at again in 7e.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.

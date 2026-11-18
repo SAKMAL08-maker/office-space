@@ -15,7 +15,7 @@ New in 7a: each IP address gets 5 tries a minute at login (Better Auth's limiter
 
 ## Next steps
 
-1. **PR 7b flood protection.** First check whether the Vercel free plan includes a Firewall rate-limit rule. If yes: exact dashboard steps, sized so `/api/presence` (one call per open tab every 10 seconds) is never blocked. If no: a small limit in code on the logged-out pages only.
+1. **PR 7b flood protection** (branch `feat/flood-protection`, docs only). The free plan includes one Firewall rate-limit rule. The owner turns on "Logged-out pages" (`/login`, `/setup`, `/invite`, `/reset`, `/api/auth`, 60 requests a minute per IP, 429) with the steps in `docs/firewall.md`, Claude checks it live (61 requests to `/login`: 60 get 200, the 61st 429; health and a logged-in office still work), then merge. The branch sits on `docs/wrap-up-login-limits`, so merge PR #29 first.
 2. Then 7c phone layout, 7d Playwright in the repo and in CI on every PR, 7e security review of the whole app. One session each (see `docs/PLAN.md`).
 3. Owner: confirm the live limit is per address: 6 wrong logins from phone data, then a normal login from the laptop on Wi-Fi should still work.
 4. Still open from before: open the CSV in Excel or Google Sheets; a live picture upload; the live 5c look, the gate swing, an office with 6+ projects, a real phone.
