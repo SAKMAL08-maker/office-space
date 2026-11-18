@@ -75,6 +75,22 @@ Chosen by Claude while building PR 6c, 2026-11-17, for the owner to confirm in r
 - A cell starting with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, so a spreadsheet shows it as text instead of running it as a formula.
 - The download needs an admin, not a check-in, like the Everyone's time log page it sits on.
 
+## PR 7 Hardening
+
+Proposed by Claude in the PR 7 plan. The owner said "go" without changing them, so Claude's recommendations apply, 2026-11-18.
+
+- PR 7 is split into five PRs, in this order: 7a login limits, 7b flood protection, 7c phone layout, 7d browser tests, 7e security review.
+- Each IP address gets 5 tries a minute at logging in.
+- Try counts are kept in the app's own database, not in Upstash Redis.
+- The browser test runs in CI on every PR.
+
+Chosen by Claude while building PR 7a, 2026-11-18, for the owner to confirm in review.
+
+- Every login try counts, right or wrong, because that is how the login library counts. People sharing one office network share the 5 tries.
+- The setup, invite and reset forms get the same 5 tries a minute per IP address, each form counted on its own.
+- A refused visitor waits a full minute from their last allowed try. Refused tries do not make the wait longer.
+- Limits are on in every environment, including local runs and tests, so they behave like the live site.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.
