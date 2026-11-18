@@ -8,6 +8,11 @@ export type WorkFormState = FormState & {
   receiverId?: string;
 };
 
+/** The message for a form refused because of too many tries in a short time. */
+export function tooManyTries(seconds: number): string {
+  return `Too many tries. Wait ${seconds} ${seconds === 1 ? "second" : "seconds"} and try again.`;
+}
+
 /** Reads a text field from a submitted form. A missing field becomes an empty string. */
 export function textField(formData: FormData, name: string): string {
   const value = formData.get(name);

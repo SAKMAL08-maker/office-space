@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
@@ -364,4 +365,20 @@ export const profilePictures = pgTable(
       .where(sql`${table.status} = 'ready'`),
     index("profile_pictures_user_created_idx").on(table.userId, table.createdAt),
   ],
+);
+
+// Better Auth keeps its login try counts here, so every server copy shares them.
+// The setup, invite and reset forms count their tries here too (src/server/rate-limit.ts).
+
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    id: text("id").primaryKey(),
+    // The visitor's IP address and the path, like "203.0.113.7|/sign-in/email".
+    key: text("key").notNull().unique(),
+    count: integer("count").notNull(),
+    // Milliseconds since 1970, as Better Auth writes it.
+    lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+  },
+  (table) => [index("rate_limits_last_request_idx").on(table.lastRequest)],
 );

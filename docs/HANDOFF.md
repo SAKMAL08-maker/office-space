@@ -10,17 +10,19 @@ People can log in, check in and out, send and answer tasks, manage projects in a
 
 ## In progress
 
-- This wrap-up: branch `docs/wrap-up-csv` (handoff, session log, plan status), as its own small docs PR.
-- Merged branch `feat/time-log-csv` was kept on GitHub, because deleting merged branches is still the owner's open decision.
+- **PR 7a Login limits**, branch `feat/login-rate-limits`, open for review. It has a migration (`20261118145435_rate_limits.sql`, one new `rate_limits` table). The owner runs Migrate production from the PR branch **before** merging: login fails without the table.
+- What 7a does: each IP address gets 5 tries a minute at login (Better Auth's limiter, `storage: "database"`, in `src/server/auth.ts`) and at each of the setup, invite and reset forms (`takeFormTry()` in `src/server/rate-limit.ts`). A 6th try is refused with "Too many tries. Wait N seconds and try again."
+- PR 7 is split into 7a to 7e (see `docs/PLAN.md` and `docs/decisions.md`).
 
 ## Next steps
 
 1. Owner: on the live site, download the CSV and open it in Excel or Google Sheets.
-2. PR 7 hardening: login rate limits, protection against traffic floods, phone layout, security review, and Playwright in the repo with the first committed browser test.
+2. After 7a merges: 7b flood protection (first check whether the Vercel free plan includes a Firewall rate-limit rule), then 7c phone layout, 7d Playwright in the repo and CI, 7e security review. One session each.
 3. Still open from before: a live picture upload; the owner's live check of the 5c look, the gate swing, an office with 6 or more projects, and a real phone.
 
 ## Open decisions (owner)
 
+- Confirm or change Claude's PR 7a choices in `docs/decisions.md` (every try counts, so one office network shares 5 tries; the same limit on setup, invite and reset; on in every environment).
 - Confirm or change Claude's PR 6c choices in `docs/decisions.md` (the columns, the formula guard, admin without a check-in) and PR 6b choices (20 MB chosen file, 3 uploads at once, 10-minute cleanup, black or white initials, `users.image` unused).
 - One-line reasons for `docs/decisions.md`: the four PR 6 choices; and from before: polish before PR 6, floors that refresh by themselves, the faded grey away look.
 - Reflection lines in `docs/ai-logs/SESSION-LOG.md` for PR 5a, PR 5c, the cubicle-row fix, PR 6a, PR 6b and PR 6c.
@@ -29,6 +31,7 @@ People can log in, check in and out, send and answer tasks, manage projects in a
 
 ## Verified vs. not
 
+- Tested (7a): 188 Vitest tests in 18 files against a throwaway Postgres, none skipped (7 new), lint, format, typecheck, build. Against the built app on port 3001: 5 wrong logins from one address got 401, the 6th got 429 with `x-retry-after: 60`, another address still got 401, a spoofed address list was not trusted, and the counts were rows in `rate_limits`. Not verified: the setup, invite and reset forms refusing a 6th try in a browser (their counting is tested, the 2-line wiring is not), the login page's wait message on screen, the live site.
 - Tested (6c): 181 Vitest tests in 17 files against a throwaway Postgres, none skipped (11 new), lint, format, typecheck, build, and CI on #26 and on `main`. Live: health, and logged-out CSV sent to log in.
 - Rendered (local server, throwaway database): Everyone's time log at desktop and phone width; the real button downloaded `time-log-2026-11-17.csv` with Manila times, the formula guard and the UTF-8 mark.
 - Not verified: the CSV opened in Excel or Google Sheets, an admin download on the live site, Safari. From 6b: a live picture upload, iPhone photos (HEIC), a slow phone. From 6a: a 25 MB file, files on Sent between two real accounts. From before: real phones and graphics cards, many people at once, two tabs of one person, invite and reset links live.
