@@ -2,47 +2,43 @@
 
 ## Where things stand
 
-PRs 0 to 5c, the cubicle-row fix, PR 6a Attachments (#22), PR 6b Profile pictures (#24) and **PR 6c CSV export** (#26, merge `cbc016d`) are merged; the app is at https://office-space-tawny.vercel.app. CI on `main` passed for `cbc016d`, Vercel reported the deploy complete, `/api/health` returned `{"ok":true}`, and logged out, `/admin/time-log/csv` sends visitors to log in. 6c had no migration.
+PRs 0 to 6c and **PR 7a Login limits** (#28, merge `f279b68`) are merged; the app is at https://office-space-tawny.vercel.app. CI on `main` passed for `f279b68`, Vercel reported the deploy complete, `/api/health` returned `{"ok":true}`, and one wrong live login got 401 (not 500), so the new `rate_limits` table is in use. Its migration (`20261118145435_rate_limits.sql`) was applied by the owner's Migrate production run from the PR branch before merging.
 
-People can log in, check in and out, send and answer tasks, manage projects in a 3D office with presence, attach project files and set a profile picture (see `docs/PLAN.md`). New in 6c: Everyone's time log has a Download CSV button. `GET /admin/time-log/csv?tz=<zone>` calls `requireAdmin()`, reads every record oldest first (`listTimeLogForExport()` in `src/server/attendance.ts`) and builds the file in `src/server/time-export.ts`: Name, Email, Checked in, Checked out, Minutes, in the browser's time zone (UTC if unknown), every cell quoted, formula starts made safe with `'`, a UTF-8 mark first. Nothing is stored.
+New in 7a: each IP address gets 5 tries a minute at login (Better Auth's limiter, `storage: "database"`, `/sign-in/*` rule in `src/server/auth.ts`) and at each of the setup, invite and reset forms (`takeFormTry()` in `src/server/rate-limit.ts`, same table). The 6th try is refused with "Too many tries. Wait N seconds and try again." Every try counts, right or wrong. **Any new form usable without logging in must call `takeFormTry()`.**
 
 `requireCheckedIn()` guards every office action, page and API route. **Every later office action must call it too.** Account things (time log, profile, pictures, the CSV) need only `requireUser()` or `requireAdmin()`.
 
 ## In progress
 
-- **PR 7a Login limits**, branch `feat/login-rate-limits`, open for review. It has a migration (`20261118145435_rate_limits.sql`, one new `rate_limits` table). The owner runs Migrate production from the PR branch **before** merging: login fails without the table.
-- What 7a does: each IP address gets 5 tries a minute at login (Better Auth's limiter, `storage: "database"`, in `src/server/auth.ts`) and at each of the setup, invite and reset forms (`takeFormTry()` in `src/server/rate-limit.ts`). A 6th try is refused with "Too many tries. Wait N seconds and try again."
-- PR 7 is split into 7a to 7e (see `docs/PLAN.md` and `docs/decisions.md`).
+- This wrap-up: branch `docs/wrap-up-login-limits` (handoff, session log), as its own small docs PR.
+- Merged branches `feat/login-rate-limits` and `feat/time-log-csv` were kept on GitHub (deleting merged branches is still open).
 
 ## Next steps
 
-1. Owner: on the live site, download the CSV and open it in Excel or Google Sheets.
-2. After 7a merges: 7b flood protection (first check whether the Vercel free plan includes a Firewall rate-limit rule), then 7c phone layout, 7d Playwright in the repo and CI, 7e security review. One session each.
-3. Still open from before: a live picture upload; the owner's live check of the 5c look, the gate swing, an office with 6 or more projects, and a real phone.
+1. **PR 7b flood protection.** First check whether the Vercel free plan includes a Firewall rate-limit rule. If yes: exact dashboard steps, sized so `/api/presence` (one call per open tab every 10 seconds) is never blocked. If no: a small limit in code on the logged-out pages only.
+2. Then 7c phone layout, 7d Playwright in the repo and in CI on every PR, 7e security review of the whole app. One session each (see `docs/PLAN.md`).
+3. Owner: confirm the live limit is per address: 6 wrong logins from phone data, then a normal login from the laptop on Wi-Fi should still work.
+4. Still open from before: open the CSV in Excel or Google Sheets; a live picture upload; the live 5c look, the gate swing, an office with 6+ projects, a real phone.
 
 ## Open decisions (owner)
 
-- Confirm or change Claude's PR 7a choices in `docs/decisions.md` (every try counts, so one office network shares 5 tries; the same limit on setup, invite and reset; on in every environment).
-- Confirm or change Claude's PR 6c choices in `docs/decisions.md` (the columns, the formula guard, admin without a check-in) and PR 6b choices (20 MB chosen file, 3 uploads at once, 10-minute cleanup, black or white initials, `users.image` unused).
-- One-line reasons for `docs/decisions.md`: the four PR 6 choices; and from before: polish before PR 6, floors that refresh by themselves, the faded grey away look.
-- Reflection lines in `docs/ai-logs/SESSION-LOG.md` for PR 5a, PR 5c, the cubicle-row fix, PR 6a, PR 6b and PR 6c.
-- Whether the bucket's Lifecycle is set to "Keep only the last version" (not confirmed).
-- Whether to delete merged branches on GitHub; whether check-out asks for confirmation, admins can correct a logged time, and Everyone's time log (or the CSV) shows work periods.
+- Confirm or change Claude's PR 7a choices in `docs/decisions.md` (every try counts, so one office network shares 5 tries; same limit on setup, invite and reset; on in every environment). Also the PR 6c and 6b choices listed there.
+- One-line reasons for `docs/decisions.md`: PR 7's four choices, the PR 6 choices, polish before PR 6, floors that refresh by themselves, the faded grey away look.
+- Reflection lines in `docs/ai-logs/SESSION-LOG.md` for PR 5a, 5c, the cubicle-row fix, 6a, 6b, 6c and 7a.
+- Whether the first 7a commit message, which wrongly says the limiter "was off on Vercel's preview builds", should stay (PR #28's description has the correction; fixing it means rewriting `main`'s history, so Claude advises leaving it).
+- Whether the bucket's Lifecycle is "Keep only the last version"; whether to delete merged branches; check-out confirmation; admins correcting a logged time; work periods in Everyone's time log or the CSV.
 
 ## Verified vs. not
 
-- Tested (7a): 188 Vitest tests in 18 files against a throwaway Postgres, none skipped (7 new), lint, format, typecheck, build. Against the built app on port 3001: 5 wrong logins from one address got 401, the 6th got 429 with `x-retry-after: 60`, another address still got 401, a spoofed address list was not trusted, and the counts were rows in `rate_limits`. Not verified: the setup, invite and reset forms refusing a 6th try in a browser (their counting is tested, the 2-line wiring is not), the login page's wait message on screen, the live site.
-- Tested (6c): 181 Vitest tests in 17 files against a throwaway Postgres, none skipped (11 new), lint, format, typecheck, build, and CI on #26 and on `main`. Live: health, and logged-out CSV sent to log in.
-- Rendered (local server, throwaway database): Everyone's time log at desktop and phone width; the real button downloaded `time-log-2026-11-17.csv` with Manila times, the formula guard and the UTF-8 mark.
-- Not verified: the CSV opened in Excel or Google Sheets, an admin download on the live site, Safari. From 6b: a live picture upload, iPhone photos (HEIC), a slow phone. From 6a: a 25 MB file, files on Sent between two real accounts. From before: real phones and graphics cards, many people at once, two tabs of one person, invite and reset links live.
+- Tested (7a): 188 Vitest tests in 18 files on a throwaway Postgres, none skipped (7 new), lint, format, typecheck, build, CI on #28 and on `main`. Built app on port 3001: 5 wrong logins got 401, the 6th 429 with `x-retry-after: 60`, another address still 401, a spoofed address list not trusted, counts stored as rows. Live: health, and one wrong login got 401.
+- Not verified: the live limit is keyed by each visitor's address and not `no-trusted-ip` (needs a production read or the phone check above); setup, invite and reset refusing a 6th try in a browser; the login page's wait message on screen. Older gaps: the CSV in a spreadsheet, a live picture upload, iPhone photos, a 25 MB file, real phones and graphics cards, many people at once, invite and reset links live.
 
 ## Watch out for
 
 - **Production migrations run from the PR branch:** `gh workflow run migrate.yml --ref <PR branch>`, before merging. Without `--ref` it uses `main` and still says "migrations applied successfully" while changing nothing.
-- **`/merge-it` can only be typed by the owner**; Claude cannot start it. Its `--delete-branch` step is skipped until the owner decides on deleting merged branches.
-- **Permission prompts:** `.claude/settings.local.json` allows `git *`, `npm *`, `gh pr *` and a few more by prefix, so run those as separate simple commands. Installing test tools in the temp folder asks the owner first.
-- **Local browser tests:** `embedded-postgres` and Playwright in the session's temp folder (gone after the session), Postgres on port 54339, `channel: "msedge"`. Port 3000 may be the owner's own server; use 3001 for checks that skip the bucket (the bucket's CORS rule allows only 3000). Stopping a background `npx next start` leaves the node process holding the port, so stop it by port too. Wait for `networkidle` plus a moment before filling forms, or `/setup` refuses the token; on the 3D home page use `load`. `/setup` needs a `SETUP_TOKEN` of 24+ characters. Check-in is a 3D machine, so add test records straight into the throwaway database.
-- **Backblaze:** `.env.local` holds only the four `B2_` settings; Claude never reads it. A real-bucket run once timed out reaching Backblaze; rerunning worked.
-- Working copies use Windows line endings (`core.autocrlf`). `gh pr create` needs `--body-file`. Vercel reports deploys as commit statuses (context `Vercel`).
-- Account tests empty every table: only on a database whose name ends in `_test`. 3D: walkers move inside `useFrame`; avoid HTML inside the canvas; three r187 needs `shadows="percentage"`.
-- Never run `vercel env pull`. Secrets never go in the chat.
+- **Logins in tests and local runs are limited too** (5 a minute; locally every visitor counts as one address). Account tests empty `rate_limits` with the other tables; a single test logging in more than 5 times will be refused.
+- **`/merge-it` can only be typed by the owner**; its `--delete-branch` step is skipped until the owner decides on deleting merged branches.
+- **Permission prompts:** `.claude/settings.local.json` allows `git *`, `npm *`, `gh pr *` and a few more by prefix, so run those as separate simple commands.
+- **Local test database:** `npm install embedded-postgres` in the session's scratchpad (its install script is blocked, which is fine on Windows), start it on port 54339 with database `office_test`, then `DATABASE_URL=postgres://postgres:postgres@localhost:54339/office_test npm run db:migrate && npm test`. Use port 3001 for `next start` checks. Stopping a background server leaves the process holding its port, so stop it by port too. Playwright is not installed this session (7d puts it in the repo).
+- **Backblaze:** `.env.local` holds only the four `B2_` settings; Claude never reads it.
+- Working copies use Windows line endings. `gh pr create` needs `--body-file`. Vercel reports deploys as commit statuses (context `Vercel`). Never run `vercel env pull`. Secrets never go in the chat.

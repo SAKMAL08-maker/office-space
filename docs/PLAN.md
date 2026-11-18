@@ -21,7 +21,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 6a  | Attachments     | Done        |
 | 6b  | Pictures        | Done        |
 | 6c  | CSV export      | Done        |
-| 7a  | Login limits    | In review   |
+| 7a  | Login limits    | Done        |
 | 7b  | Floods          | Not started |
 | 7c  | Phone layout    | Not started |
 | 7d  | Browser tests   | Not started |
