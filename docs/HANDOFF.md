@@ -22,7 +22,6 @@ New in 7a: each IP address gets 5 tries a minute at login (Better Auth's limiter
 
 ## Open decisions (owner)
 
-- Whether to accept the unexplained whole-site refusal seen after a 61-request `curl` burst (see `docs/firewall.md`), or look into it in 7e. Claude's view: accept for now, since real people stay far below 60 a minute on the logged-out pages.
 
 - Confirm or change Claude's PR 7a choices in `docs/decisions.md` (every try counts, so one office network shares 5 tries; same limit on setup, invite and reset; on in every environment). Also the PR 6c and 6b choices listed there.
 - One-line reasons for `docs/decisions.md`: PR 7's four choices, the PR 6 choices, polish before PR 6, floors that refresh by themselves, the faded grey away look.

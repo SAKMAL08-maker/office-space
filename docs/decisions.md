@@ -99,6 +99,10 @@ Recommended by Claude in the PR 7b plan and chosen by the owner ("go with your r
 - The owner turns the rule on in the dashboard, following the steps in `docs/firewall.md`.
 - Logged-in routes stay without a Firewall limit; this is looked at again in 7e.
 
+Chosen by the owner after the live Firewall check, 2026-11-20.
+
+- The unexplained whole-site refusal seen after a 61-request `curl` burst (see `docs/firewall.md`) is accepted. Claude's reason, accepted by the owner: real people stay far below 60 requests a minute on the logged-out pages.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.
