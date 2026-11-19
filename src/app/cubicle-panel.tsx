@@ -26,7 +26,7 @@ export function CubiclePanel({
   return (
     <aside
       aria-label="Cubicle details"
-      className="pointer-events-auto mx-auto flex w-full max-w-md flex-col gap-2 rounded-xl border border-zinc-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95"
+      className="pointer-events-auto mx-auto flex max-h-[45dvh] w-full max-w-md flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">

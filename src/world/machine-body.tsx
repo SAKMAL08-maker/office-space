@@ -45,6 +45,10 @@ export function MachineBody({
       }}
       {...clickable}
     >
+      {/* An unseen box a little bigger than the cabinet, so a finger on a phone hits it easily. */}
+      <mesh position={[0, (BASE + BODY) / 2, 0]} visible={false}>
+        <boxGeometry args={[1.6, BASE + BODY + 0.4, 1.4]} />
+      </mesh>
       <mesh position={[0, BASE / 2, 0]} receiveShadow>
         <boxGeometry args={[1.0, BASE, 0.8]} />
         <meshStandardMaterial color={colors.machineTrim} />

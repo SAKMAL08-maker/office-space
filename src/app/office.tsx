@@ -109,6 +109,7 @@ function OfficeScene({
   const [machineRequest, setMachineRequest] = useState<MachineRequest | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showPeople, setShowPeople] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const spot = useRef<SpotReader>(null);
   const people = usePresence({
     enabled: floor !== null,
@@ -125,7 +126,8 @@ function OfficeScene({
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#20242c]">
-      <div className="absolute inset-0">
+      {/* Touches on the scene are for walking: the browser must not scroll or zoom the page with them. */}
+      <div className="absolute inset-0 touch-none">
         {ready && (
           <World
             offices={offices}
@@ -139,42 +141,72 @@ function OfficeScene({
         )}
       </div>
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
-        <div className="pointer-events-auto mx-auto flex max-w-3xl flex-col gap-2 rounded-xl border border-zinc-200 bg-white/90 p-3 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
-            <h1 className="text-base font-semibold tracking-tight">Office Space</h1>
-            {greeting}
+        {/* It never grows past the screen: an open menu scrolls inside itself instead. */}
+        <div className="pointer-events-auto mx-auto flex max-h-[calc(100dvh-1.5rem)] max-w-3xl flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-white/90 p-3 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+              <h1 className="text-base font-semibold tracking-tight">Office Space</h1>
+              <div className="hidden sm:block">{greeting}</div>
+            </div>
+            {/* On a phone, everything but the two machines waits behind this button. */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-expanded={menuOpen}
+              aria-controls="office-menu"
+              className={`${quietButtonClass} sm:hidden`}
+            >
+              {menuOpen ? "Close menu" : "Menu"}
+            </button>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => goToMachine("checkIn")}
               disabled={pending}
-              className={quietButtonClass}
+              className={`${quietButtonClass} flex-1 sm:flex-none`}
             >
-              Go to check-in machine
+              <span className="sm:hidden">Check-in machine</span>
+              <span className="hidden sm:inline">Go to check-in machine</span>
             </button>
             <button
               type="button"
               onClick={() => goToMachine("checkOut")}
               disabled={pending || !checkedIn}
-              className={quietButtonClass}
+              className={`${quietButtonClass} flex-1 sm:flex-none`}
             >
-              Go to check-out machine
+              <span className="sm:hidden">Check-out machine</span>
+              <span className="hidden sm:inline">Go to check-out machine</span>
             </button>
-            {floor && (
-              <button
-                type="button"
-                onClick={() => setShowPeople((shown) => !shown)}
-                aria-expanded={showPeople}
-                className={quietButtonClass}
-              >
-                {/* Not "People", which is the admin's page of accounts in the same menu. */}
-                {showPeople ? "Hide who's in" : `Who's in${people ? ` (${people.length})` : ""}`}
-              </button>
-            )}
-            {menu}
+            {/* On wide screens this wrapper steps aside, so its buttons sit in the row above. */}
+            <div
+              id="office-menu"
+              className={`${menuOpen ? "flex" : "hidden"} w-full flex-col gap-2 sm:contents`}
+            >
+              <div className="text-sm sm:hidden">{greeting}</div>
+              <div className="flex flex-wrap gap-2 sm:contents">
+                {floor && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPeople((shown) => !shown)}
+                    aria-expanded={showPeople}
+                    className={quietButtonClass}
+                  >
+                    {/* Not "People", which is the admin's page of accounts in the same menu. */}
+                    {showPeople
+                      ? "Hide who's in"
+                      : `Who's in${people ? ` (${people.length})` : ""}`}
+                  </button>
+                )}
+                {menu}
+              </div>
+            </div>
           </div>
-          {floor && showPeople && <PeopleList people={people} viewerId={viewerId} />}
+          {floor && showPeople && (
+            <div className={menuOpen ? "" : "hidden sm:block"}>
+              <PeopleList people={people} viewerId={viewerId} />
+            </div>
+          )}
           {pending && (
             <p className="text-sm text-zinc-600 dark:text-zinc-400">Using the machine…</p>
           )}
@@ -194,7 +226,12 @@ function OfficeScene({
       ) : (
         <p className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-4">
           <span className="rounded-full bg-zinc-900/80 px-3 py-1 text-center text-xs text-white">
-            Click the floor to walk there. Click a machine, a door or a desk to go to it.
+            <span className="pointer-coarse:hidden">
+              Click the floor to walk there. Click a machine, a door or a desk to go to it.
+            </span>
+            <span className="hidden pointer-coarse:inline">
+              Tap the floor to walk there. Tap a machine, a door or a desk to go to it.
+            </span>
           </span>
         </p>
       )}
