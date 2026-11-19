@@ -103,6 +103,19 @@ Chosen by the owner after the live Firewall check, 2026-11-20.
 
 - The unexplained whole-site refusal seen after a 61-request `curl` burst (see `docs/firewall.md`) is accepted. Claude's reason, accepted by the owner: real people stay far below 60 requests a minute on the logged-out pages.
 
+Recommended by Claude in the PR 7c plan and chosen by the owner ("go with your recommendations"), 2026-11-20.
+
+- On a phone (narrower than 640 px) the office menu shows only the two machine buttons and a Menu button. Everything else, Who's in and Inbox included, is behind Menu. Why: accepted Claude's recommendation.
+- No dragging or pinching to move the camera, and no landscape layout, in 7c. Why: accepted Claude's recommendation.
+
+Chosen by Claude while building PR 7c, 2026-11-20, for the owner to confirm in review.
+
+- On a phone the greeting ("You checked in on…" or "You are checked out.") also moves behind Menu, to keep the bar to two rows.
+- The hint says "Tap" on touch screens and "Click" with a mouse, decided by the browser's main pointer.
+- Each machine has an unseen tap area a little bigger than the cabinet, because on a phone the cabinet is only about 30 points wide.
+- Inside an office on a phone, the camera looks less far ahead, so the character stays clear of the cubicle panel. The lobby keeps the usual framing.
+- The page is not stretched under the notch (`viewport-fit=cover` is left off), so the browser keeps every page clear of it by itself.
+
 ## Technical
 
 Recommended by Claude and approved by the owner with the plan, 2026-11-10.
