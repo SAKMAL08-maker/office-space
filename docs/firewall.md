@@ -39,7 +39,7 @@ Pages that need a login are not rate limited. A stranger calling them is refused
 2. Select **⋯** > **Configure** at the top right, then **Add New...** > **Rule**.
 3. Name: `Logged-out pages`.
 4. Under **If**, add the first condition: **Request Path**, **Starts with**, `/login`.
-5. Add four more conditions, choosing **OR** for each one: Request Path starts with `/setup`, then `/invite`, then `/reset`, then `/api/auth`. Check that each joiner reads **OR**, not AND.
+5. Add four more conditions, choosing **OR** for each one: Request Path starts with `/setup`, then `/invite`, then `/reset`, then `/api/auth`. Check that each joiner reads **OR**, not AND. The first time this rule was made, the joiner before `/api/auth` ended up as AND, so neither `/reset` nor `/api/auth` was limited (a path cannot start with both). Five separate OR groups is right.
 6. Under **Then**, choose **Rate Limit**. The first time, a **Rate Limiting Pricing** box appears: read it, then **Continue**.
 7. Choose **Fixed Window**. Time Window: `60s`. Request Limit: `60`. Key: **IP Address** only.
 8. Leave the action as **Too Many Requests (429)**. Don't add a persistent action.
@@ -47,7 +47,10 @@ Pages that need a login are not rate limited. A stranger calling them is refused
 
 ## Checking it
 
-From one computer, request `/login` 61 times within a minute: the first 60 get 200 and the 61st gets 429. That computer's address cannot open the login page for up to a minute afterwards. `/api/health` and a logged-in office must keep working throughout.
+1. **Read the rule back** (the Vercel connection, or the dashboard): five OR groups, `rate_limit` at 60 per 60 s by `ip`, no persistent action (`actionDuration` empty).
+2. **Send a burst** from one computer: request `/login` 61 times within a minute. The first 60 should get 200 and the 61st should be refused.
+
+What happened on 2026-11-19 (with `curl`): the first 60 got 200 and the 61st got **403**, not the expected 429. For a few minutes afterwards that computer was refused on the whole site: `/api/health` showed Vercel's "Security Checkpoint" browser-check page, and `/api/presence` got 403. Within minutes everything answered normally again (health 200, login 200, and a logged-out `/api/presence` 307 to the login page). The rule's settings were correct, and Vercel recorded no attack, so the cause is not known. It may be Vercel challenging a non-browser client after it has been rate limited. Real people stay far below 60 a minute on these pages, so they should never see it. A burst test therefore blocks the testing computer from the whole site for a few minutes: don't run it from a computer someone is working on.
 
 ## When pages change
 

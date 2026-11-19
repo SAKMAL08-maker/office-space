@@ -15,12 +15,14 @@ New in 7a: each IP address gets 5 tries a minute at login (Better Auth's limiter
 
 ## Next steps
 
-1. **PR 7b flood protection** (branch `feat/flood-protection`, docs only). The free plan includes one Firewall rate-limit rule. The owner turns on "Logged-out pages" (`/login`, `/setup`, `/invite`, `/reset`, `/api/auth`, 60 requests a minute per IP, 429) with the steps in `docs/firewall.md`, Claude checks it live (61 requests to `/login`: 60 get 200, the 61st 429; health and a logged-in office still work), then merge. The branch sits on `docs/wrap-up-login-limits`, so merge PR #29 first.
+1. **PR 7b flood protection** (branch `feat/flood-protection`, docs only). The free plan includes one Firewall rate-limit rule. PR #30. The owner turned on "Logged-out pages" (`/login`, `/setup`, `/invite`, `/reset`, `/api/auth`, 60 requests a minute per IP, 429); Claude read it back through the Vercel connection (version 2, five OR groups, after fixing an AND joiner). Live burst on 2026-11-19: 60 got 200, the 61st 403, then the testing computer was refused on the whole site for a few minutes (cause unknown, see `docs/firewall.md`). PR #29 is merged; #30 waits for "merge it".
 2. Then 7c phone layout, 7d Playwright in the repo and in CI on every PR, 7e security review of the whole app. One session each (see `docs/PLAN.md`).
 3. Owner: confirm the live limit is per address: 6 wrong logins from phone data, then a normal login from the laptop on Wi-Fi should still work.
 4. Still open from before: open the CSV in Excel or Google Sheets; a live picture upload; the live 5c look, the gate swing, an office with 6+ projects, a real phone.
 
 ## Open decisions (owner)
+
+- Whether to accept the unexplained whole-site refusal seen after a 61-request `curl` burst (see `docs/firewall.md`), or look into it in 7e. Claude's view: accept for now, since real people stay far below 60 a minute on the logged-out pages.
 
 - Confirm or change Claude's PR 7a choices in `docs/decisions.md` (every try counts, so one office network shares 5 tries; same limit on setup, invite and reset; on in every environment). Also the PR 6c and 6b choices listed there.
 - One-line reasons for `docs/decisions.md`: PR 7's four choices, the PR 6 choices, polish before PR 6, floors that refresh by themselves, the faded grey away look.
