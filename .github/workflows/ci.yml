@@ -46,3 +46,44 @@ jobs:
       - run: npm run db:migrate
       - run: npm test
       - run: npm run build
+
+  # Uses the app in a real browser: log in, check in, walk, check out. Runs beside "check".
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: office_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:ci-only@localhost:5432/office_test
+      BETTER_AUTH_SECRET: ci-only-not-a-real-secret-0123456789
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate
+      # Builds the app, starts it, then runs every test in tests/browser.
+      - run: npm run test:browser
+      # A screenshot and a step-by-step replay of any test that failed.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
