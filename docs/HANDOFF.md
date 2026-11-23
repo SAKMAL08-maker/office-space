@@ -10,12 +10,13 @@ From 7a: each IP gets 5 tries a minute at login, setup, invite and reset, counte
 
 ## In progress
 
-- This wrap-up: branch `docs/wrap-up-flood-protection` (handoff, session log), as its own small docs PR.
+- The 7b wrap-up: PR #31, branch `docs/wrap-up-flood-protection` (handoff, session log), waiting to merge.
+- **PR 7c Phone layout**, branch `feat/phone-layout`, built on top of #31 because both change this file. Merge #31 first. On a phone (under 640 px) the office menu is two rows: title and Menu, then the two machine buttons. Everything else, the greeting included, is behind Menu. Taps on the scene never scroll or zoom the page. The hint says Tap or Click to match the device. Machines have a slightly bigger unseen tap area. Inside an office on a phone the camera keeps the character clear of the cubicle panel, which is capped at 45% of the screen. Desktop looks as before. No migration.
 - Merged branches are kept on GitHub (deleting them is still open).
 
 ## Next steps
 
-1. **PR 7c phone layout:** every page at phone width, the 3D office fitted to a narrow screen, tap to walk (see `docs/PLAN.md`).
+1. Owner: review and merge #31, then 7c. Afterwards, try the office on a real phone: tap the floor, a machine, a door and a desk.
 2. Then 7d Playwright in the repo and in CI on every PR, 7e security review of the whole app (include logged-in routes having no Firewall limit). One session each.
 3. Owner: confirm the 7a live limit is per address: 6 wrong logins from phone data, then a normal login from the laptop on Wi-Fi should still work.
 4. Still open from before: open the CSV in Excel or Google Sheets; a live picture upload; the live 5c look, the gate swing, an office with 6+ projects, a real phone.
@@ -30,6 +31,7 @@ From 7a: each IP gets 5 tries a minute at login, setup, invite and reset, counte
 
 ## Verified vs. not
 
+- Tested (7c, local only): every page rendered at 375 px (touch, phone mode) and 1280 px against a local database with one admin and one project. No page scrolls sideways. In Chrome's simulated touch screen, tapping the floor walked the character, a tap just outside the check-in machine walked there and asked the "still not checked out" question, and a tap on the desk walked to the chair and opened the cubicle panel. Not verified: a real phone (iPhone Safari, Android Chrome), many offices or long names at phone width, landscape.
 - Tested (7b): the rule read back through the Vercel connection (version 2). Live `curl` burst on 2026-11-19, before the AND fix: 60 requests to `/login` got 200 and the 61st got 403 (not 429). The testing computer was then refused on the whole site for a few minutes (Security Checkpoint on health, 403 on presence) and recovered by itself. No attack recorded; cause unknown. The owner accepted it. Format check, lint and typecheck passed, and CI passed on #30.
 - Not verified: `/api/auth` and `/reset` under a live burst (read-back only); why the answer was 403 and the whole site was refused; CI on `main` for `61b6c18` (it was still running at wrap-up). From 7a: the live limit keyed per address; setup, invite and reset refusing a 6th try in a browser. Older gaps: the CSV in a spreadsheet, a live picture upload, real phones, many people at once, invite and reset links live.
 

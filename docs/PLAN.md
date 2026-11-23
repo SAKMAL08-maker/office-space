@@ -23,7 +23,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 6c  | CSV export      | Done        |
 | 7a  | Login limits    | Done        |
 | 7b  | Floods          | Done        |
-| 7c  | Phone layout    | Not started |
+| 7c  | Phone layout    | In review   |
 | 7d  | Browser tests   | Not started |
 | 7e  | Security review | Not started |
 
