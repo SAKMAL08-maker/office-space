@@ -201,3 +201,14 @@ Chosen by Claude while building PR 5b, 2026-11-11.
 Chosen by the owner after PR 5b, 2026-11-11.
 
 - Claude Code's automatic safety check stays on, and no permission rule lets Claude start production migrations. Why: "it allows me to do manual reviews on actions that causes the check". The owner starts the Migrate production workflow with `!`.
+
+Recommended by Claude in the PR 7d plan and chosen by the owner ("go"), 2026-11-23.
+
+- The browser test also runs at phone width with touch (375 px), because 7c had just changed the phone layout. Why: accepted Claude's recommendation.
+- A second test covers the plain-buttons page for browsers without 3D. Why: accepted Claude's recommendation.
+- The browser job is not a required check at first. It becomes one after a few PRs show it is reliable. Why: accepted Claude's recommendation.
+
+Chosen by Claude while building PR 7d, 2026-11-23, for the owner to confirm in review.
+
+- The test walks with the "Go to check-in machine" and "Go to check-out machine" buttons, not by tapping the 3D floor at a spot, which breaks whenever the camera moves.
+- The tests run against the built app (`next build` and `next start`) on port 3100, and empty the `_test` database before each test.

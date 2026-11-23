@@ -8,6 +8,7 @@
 
 - `npm run dev`: local server on port 3000
 - `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`: the same checks CI runs
+- `npm run test:browser`: Playwright tests in `tests/browser/`. Builds the app and starts it on port 3100. Needs `DATABASE_URL` on a migrated database whose name ends in `_test`, and Chromium (`npx playwright install chromium`)
 - `npm run format`: fix formatting
 - `npm run db:generate`: write a new migration file after changing `src/db/schema.ts`
 - `npm run db:migrate`: apply migrations to the database in `DATABASE_URL`
@@ -21,9 +22,9 @@
 - `src/ui/`: shared form parts, and `avatar.tsx` (a picture, or initials on the person's shirt colour)
 - `src/world/`: the 3D office. `layout.ts` places everything on a grid of one-metre cells, `path.ts` finds walks, and each 3D object has its own small component. The floor data comes from `src/server/floor.ts`, which checks the gate itself
 - `scripts/set-bucket-cors.mjs`: lets the site's browsers upload to the bucket. Run once per site address
-- `tests/`: Vitest tests
+- `tests/`: Vitest tests (`*.test.ts`). `tests/browser/` holds the Playwright tests (`*.spec.ts`), set up in `playwright.config.ts`
 - `docs/`: plan, handoff, decisions, AI usage and session log; `firewall.md` records the Vercel Firewall rule
-- `.github/workflows/ci.yml`: CI, with a real Postgres service
+- `.github/workflows/ci.yml`: CI, with a real Postgres service: the `check` job, and the `browser` job beside it
 - `.github/workflows/migrate.yml`: applies migrations to production, started by hand
 
 ## Rules that must not break

@@ -10,13 +10,13 @@ From 7b: one Vercel Firewall rule limits the logged-out pages to 60 requests a m
 
 ## In progress
 
-- This wrap-up: branch `docs/wrap-up-phone-layout` (handoff, plan status, session log), as its own small docs PR.
+- **PR 7d browser tests**, branch `test/browser-tests`, in review. Playwright (Chromium) runs `tests/browser/` against the built app on port 3100: set up the first admin, log in, walk to the check-in machine, walk to the check-out machine, Log out offered, still checked out after a reload. Run at desktop size and at phone size (375 px, touch), plus the plain-buttons page with WebGL off. CI runs it in a new `browser` job beside `check`; not a required check yet. `npm run test:browser`.
 - Merged branches are kept on GitHub (deleting them is still open).
 
 ## Next steps
 
 1. Owner: try the live office on a real phone. Tap the floor, a machine, an office door and a desk.
-2. **PR 7d browser tests:** Playwright in the repo and in CI on every PR, with a first test: log in, check in, walk, check out (see `docs/PLAN.md`). Then 7e security review (include logged-in routes having no Firewall limit). One session each.
+2. Watch the `browser` CI job over a few PRs ("flaky" in its log means a test passed only on its one retry). Once it is reliable, make it a required check in GitHub. Then 7e security review (include logged-in routes having no Firewall limit). One session each.
 3. Owner: confirm the 7a live limit is per address: 6 wrong logins from phone data, then a normal login from the laptop on Wi-Fi should still work.
 4. Still open from before: open the CSV in Excel or Google Sheets; a live picture upload; the live 5c look, the gate swing, an office with 6+ projects.
 
@@ -33,7 +33,11 @@ From 7b: one Vercel Firewall rule limits the logged-out pages to 60 requests a m
 - Tested (7c, local): lint, format check, typecheck; 188 tests on a local Postgres; CI on #32 and on `main`. Every page rendered at 375 px (touch, phone mode) and 1280 px with one admin and one project: no page scrolls sideways. In Chrome's simulated touch screen: a floor tap walked; a tap just outside the check-in machine walked there and asked "still not checked out"; a desk tap walked to the chair and opened the cubicle panel.
 - Not verified: a real phone (iPhone Safari, Android Chrome); many offices or long names at phone width; landscape. From 7b: `/api/auth` and `/reset` under a live burst; why a burst got 403 and refused the whole site. From 7a: the live limit keyed per address; setup, invite and reset refusing a 6th try in a browser. Older: the CSV in a spreadsheet, a live picture upload, many people at once, invite and reset links live.
 
+- Tested (7d, local): lint, format check, typecheck. After the test fixes, the desktop 3D test passed 6 of 7 runs and the plain-buttons test every run. The phone test passed the last 2 of 5 runs. The earlier phone failures: Menu tapped before it was drawn (test fixed), the computer going to sleep mid-test, and a 90 s wait that was too short (now 150 s). The one desktop failure took over 150 s, and its details were lost. In software graphics the page can freeze for 30 s or more after check-in while the office is first drawn. Not verified: the new CI job itself until the PR runs.
+
 ## Watch out for
+
+- **Browser tests:** they empty the `_test` database before each test, so never run them at the same time as `npm test` on the same database. Locally, a running `next start -p 3100` (with the same env as `playwright.config.ts`) is reused, which skips the build. Next.js keeps the previous page hidden in the document, so find things by role (`getByRole`) or filter to visible ones; a plain `getByLabel` can find two.
 
 - **Local renders:** in the scratchpad, `npm install embedded-postgres playwright-core` (an install-scripts warning is harmless). Start Postgres on port 54339, database `office_test`, then run `next dev -p 3001` with `DATABASE_URL`, `BETTER_AUTH_URL=http://localhost:3001`, and made-up local `BETTER_AUTH_SECRET` and `SETUP_TOKEN` (24+ characters). Drive the system Chrome with `--use-angle=swiftshader`. The 3D home page never fires "load": wait for `commit`. Allow 15 s for the camera to settle before aiming a tap, and about 14 s for a walk to a machine.
 - **The full test suite takes about 6 minutes** locally; run it in the background.
