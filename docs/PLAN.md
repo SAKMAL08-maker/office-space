@@ -25,7 +25,7 @@ The project folder is empty, so this is a new build. Node 24, git and GitHub CLI
 | 7b  | Floods          | Done        |
 | 7c  | Phone layout    | Done        |
 | 7d  | Browser tests   | Done        |
-| 7e  | Security review | Not started |
+| 7e  | Security review | In progress |
 
 ## Owner decisions so far
 

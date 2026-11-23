@@ -26,3 +26,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-18 | PR 7b Floods: researched the free plan's Firewall, wrote the rule and its dashboard steps            | Claude Code     |
 | 2026-11-20 | PR 7c Phone layout: short office menu on phones, tap to walk, bigger machine tap areas, renders      | Claude Code     |
 | 2026-11-23 | PR 7d Browser tests: Playwright, log in, check in, walk, check out at desktop and phone size, CI job | Claude Code     |
+| 2026-11-23 | PR 7e security review (two subagents, checked by Claude), and fix A: upload clean-up, picture checks | Claude Code     |
