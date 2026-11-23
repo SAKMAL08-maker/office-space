@@ -291,7 +291,9 @@ export const presence = pgTable(
 
 // A file attached to a project. The file itself lives in the private Backblaze bucket under
 // storage_key; this row says who may fetch it. A row stays "pending" until the server has seen
-// the uploaded file in the bucket at the promised size.
+// the uploaded file in the bucket at the promised size. "removed" is a file taken out of use while
+// its upload link may still work: it is never shown or finished, and the clean-up deletes it, with
+// anything that arrived late, once the link has expired.
 
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 
@@ -308,13 +310,13 @@ export const attachments = pgTable(
     fileName: text("file_name").notNull(),
     size: integer("size").notNull(),
     storageKey: text("storage_key").notNull().unique(),
-    status: text("status", { enum: ["pending", "ready"] })
+    status: text("status", { enum: ["pending", "ready", "removed"] })
       .notNull()
       .default("pending"),
     createdAt: createdAt(),
   },
   (table) => [
-    check("attachments_status_check", sql`${table.status} in ('pending', 'ready')`),
+    check("attachments_status_check", sql`${table.status} in ('pending', 'ready', 'removed')`),
     check(
       "attachments_size_check",
       sql`${table.size} between 1 and ${sql.raw(String(MAX_ATTACHMENT_BYTES))}`,
@@ -326,6 +328,7 @@ export const attachments = pgTable(
 // A person's profile picture. Like attachments, the file lives in the private bucket under
 // storage_key, and the row stays "pending" until the server has seen it there. Being ready also
 // needs its first bytes to be a PNG, JPEG or WebP, and the type found is kept, never the browser's.
+// "removed" works as for attachments.
 
 export const MAX_PICTURE_BYTES = 2 * 1024 * 1024;
 export const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
@@ -339,14 +342,14 @@ export const profilePictures = pgTable(
       .references(() => users.id),
     size: integer("size").notNull(),
     storageKey: text("storage_key").notNull().unique(),
-    status: text("status", { enum: ["pending", "ready"] })
+    status: text("status", { enum: ["pending", "ready", "removed"] })
       .notNull()
       .default("pending"),
     contentType: text("content_type", { enum: PICTURE_TYPES }),
     createdAt: createdAt(),
   },
   (table) => [
-    check("profile_pictures_status_check", sql`${table.status} in ('pending', 'ready')`),
+    check("profile_pictures_status_check", sql`${table.status} in ('pending', 'ready', 'removed')`),
     check(
       "profile_pictures_size_check",
       sql`${table.size} between 1 and ${sql.raw(String(MAX_PICTURE_BYTES))}`,
@@ -358,7 +361,7 @@ export const profilePictures = pgTable(
     // A ready picture always knows its type.
     check(
       "profile_pictures_ready_type_check",
-      sql`${table.status} = 'pending' or ${table.contentType} is not null`,
+      sql`${table.status} <> 'ready' or ${table.contentType} is not null`,
     ),
     uniqueIndex("profile_pictures_one_ready_per_user")
       .on(table.userId)

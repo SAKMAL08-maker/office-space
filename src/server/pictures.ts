@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { and, count, eq, gte, lt, sql } from "drizzle-orm";
-import { getDb } from "@/db/client";
+import { and, count, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { getDb, type Tx } from "@/db/client";
 import { MAX_PICTURE_BYTES, PICTURE_TYPES, profilePictures, users } from "@/db/schema";
 import { deleteStored, readStoredStart, signUpload, storedSize } from "./storage";
 import type { Result } from "./validation";
@@ -39,6 +39,52 @@ export function pictureType(bytes: Uint8Array): PictureType | null {
   return null;
 }
 
+/**
+ * Passes a stored picture on only if its first bytes are still the type found when it was
+ * finished, or null if not. The upload link works for a few minutes, so the bytes could have
+ * been replaced after the check.
+ */
+export async function checkedPicture(
+  stream: ReadableStream<Uint8Array>,
+  expected: PictureType,
+): Promise<ReadableStream<Uint8Array> | null> {
+  const reader = stream.getReader();
+  const head: Uint8Array[] = [];
+  let length = 0;
+  let done = false;
+  while (length < SIGNATURE_LENGTH && !done) {
+    const next = await reader.read();
+    done = next.done;
+    if (next.value) {
+      head.push(next.value);
+      length += next.value.length;
+    }
+  }
+  const start = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of head) {
+    start.set(chunk, offset);
+    offset += chunk.length;
+  }
+  if (pictureType(start) !== expected) {
+    await reader.cancel();
+    return null;
+  }
+
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const chunk of head) controller.enqueue(chunk);
+      if (done) controller.close();
+    },
+    async pull(controller) {
+      const next = await reader.read();
+      if (next.done) controller.close();
+      else controller.enqueue(next.value);
+    },
+    cancel: (reason) => reader.cancel(reason),
+  });
+}
+
 /** Returns what is wrong with the size, or null when it is fine. */
 export function pictureSizeProblem(size: number): string | null {
   if (!Number.isSafeInteger(size) || size < 1) return "That picture is empty.";
@@ -51,8 +97,8 @@ const lockUser = (userId: string) =>
   sql`select 1 from ${users} where ${users.id} = ${userId} for update`;
 
 /**
- * Clears this person's abandoned uploads. The record goes first, and only while still pending,
- * so one that has just been finished is never caught.
+ * Clears this person's abandoned and removed uploads. The record goes first, and only while still
+ * pending or removed, so one that has just been finished is never caught.
  */
 async function clearAbandoned(userId: string): Promise<void> {
   const abandoned = await getDb()
@@ -60,7 +106,7 @@ async function clearAbandoned(userId: string): Promise<void> {
     .where(
       and(
         eq(profilePictures.userId, userId),
-        eq(profilePictures.status, "pending"),
+        inArray(profilePictures.status, ["pending", "removed"]),
         lt(profilePictures.createdAt, sql`now() - ${ABANDONED_AFTER}`),
       ),
     )
@@ -91,7 +137,8 @@ export async function startPictureUpload(
       .where(
         and(
           eq(profilePictures.userId, userId),
-          eq(profilePictures.status, "pending"),
+          // Removed ones count too: their links may still work.
+          inArray(profilePictures.status, ["pending", "removed"]),
           gte(profilePictures.createdAt, sql`now() - ${ABANDONED_AFTER}`),
         ),
       );
@@ -106,15 +153,9 @@ export async function startPictureUpload(
   return { ok: true, id, url: await signUpload(storageKey, size) };
 }
 
-/** Throws away an upload that failed a check: the stored copy first, then the record. */
-async function discard(upload: { id: string; storageKey: string }, stored: boolean) {
-  if (stored) await deleteStored(upload.storageKey);
-  await getDb().delete(profilePictures).where(eq(profilePictures.id, upload.id));
-}
-
 /**
  * Step 2: the browser says it has sent the picture. The server checks the size and the first bytes
- * in the bucket before trusting it, then swaps it in for the old picture, which is deleted.
+ * in the bucket before trusting it, then swaps it in for the old picture, which is retired.
  */
 export async function finishPictureUpload(userId: string, pictureId: string): Promise<Result> {
   const [upload] = await getDb()
@@ -129,18 +170,17 @@ export async function finishPictureUpload(userId: string, pictureId: string): Pr
     );
   if (!upload) return { ok: false, error: NOT_FOUND };
 
+  // A failed upload stays pending. Its link may still work for a few minutes, so deleting the
+  // record now would let a late file land with nothing pointing at it; clearAbandoned removes
+  // both once the link has expired. Pending pictures are never shown.
   const size = await storedSize(upload.storageKey);
   if (size !== upload.size) {
-    await discard(upload, size !== null);
     return { ok: false, error: "The upload did not arrive complete. Please try again." };
   }
 
   const start = await readStoredStart(upload.storageKey, SIGNATURE_LENGTH);
   const type = start && pictureType(start);
-  if (!type) {
-    await discard(upload, true);
-    return { ok: false, error: "That file is not a PNG, JPEG or WebP picture." };
-  }
+  if (!type) return { ok: false, error: "That file is not a PNG, JPEG or WebP picture." };
 
   const replaced = await getDb().transaction(async (tx) => {
     await tx.execute(lockUser(userId));
@@ -150,10 +190,7 @@ export async function finishPictureUpload(userId: string, pictureId: string): Pr
       .where(and(eq(profilePictures.id, upload.id), eq(profilePictures.status, "pending")));
     // Cleared away in the meantime: the old picture stays.
     if (!still) return null;
-    const old = await tx
-      .delete(profilePictures)
-      .where(and(eq(profilePictures.userId, userId), eq(profilePictures.status, "ready")))
-      .returning({ storageKey: profilePictures.storageKey });
+    const old = (await retireReady(tx, userId)) ?? [];
     await tx
       .update(profilePictures)
       .set({ status: "ready", contentType: type })
@@ -196,12 +233,32 @@ export async function findPicture(
  * the person themselves, or an admin.
  */
 export async function removePicture(userId: string): Promise<Result> {
-  const removed = await getDb()
-    .delete(profilePictures)
-    .where(and(eq(profilePictures.userId, userId), eq(profilePictures.status, "ready")))
-    .returning({ storageKey: profilePictures.storageKey });
-  if (removed.length === 0) return { ok: false, error: "There is no picture to remove." };
+  const removed = await getDb().transaction(async (tx) => {
+    await tx.execute(lockUser(userId));
+    return retireReady(tx, userId);
+  });
+  if (!removed) return { ok: false, error: "There is no picture to remove." };
 
   for (const { storageKey } of removed) await deleteStored(storageKey);
   return { ok: true };
+}
+
+/**
+ * Takes this person's ready picture out of use, inside a transaction. One whose upload link may
+ * still work is only marked removed, for clearAbandoned to delete later; otherwise a file sent to
+ * that link would land with nothing pointing at it. Returns the stored copies to delete now, or
+ * null when there was no picture.
+ */
+async function retireReady(tx: Tx, userId: string): Promise<{ storageKey: string }[] | null> {
+  const isReady = and(eq(profilePictures.userId, userId), eq(profilePictures.status, "ready"));
+  const marked = await tx
+    .update(profilePictures)
+    .set({ status: "removed" })
+    .where(and(isReady, gte(profilePictures.createdAt, sql`now() - ${ABANDONED_AFTER}`)))
+    .returning({ id: profilePictures.id });
+  const deleted = await tx
+    .delete(profilePictures)
+    .where(isReady)
+    .returning({ storageKey: profilePictures.storageKey });
+  return marked.length + deleted.length === 0 ? null : deleted;
 }

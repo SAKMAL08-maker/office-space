@@ -10,18 +10,23 @@ import type { Result } from "./validation";
 
 export const MAX_FILES_PER_PROJECT = 20;
 const MAX_FILE_NAME_LENGTH = 200;
-// An upload not finished within this time has been abandoned, and its record is cleared away.
-const ABANDONED_AFTER = sql`interval '1 hour'`;
+// Upload links expire after five minutes, so after this nothing can still arrive and the record
+// can be cleared away along with anything stored.
+const ABANDONED_AFTER = sql`interval '10 minutes'`;
 
 const NO_ACCESS = "You can't add files to this project.";
 const NOT_FOUND = "That file is not there any more.";
 
 export type FileChoice = { fileName: string; size: number };
 
-/** Keeps only the last part of a path and drops control characters. Null if nothing is left. */
+/**
+ * Keeps only the last part of a path and drops control characters, plus invisible formatting
+ * ones (\p{Cf}): a right-to-left mark (U+202E) could make "invoice<U+202E>fdp.exe" show as "invoiceexe.pdf".
+ * Null if nothing is left.
+ */
 export function cleanFileName(raw: string): string | null {
   const base = raw.split(/[\\/]/).pop() ?? "";
-  const name = base.replace(/[\u0000-\u001f\u007f]/g, "").trim();
+  const name = base.replace(/[\u0000-\u001f\u007f]|\p{Cf}/gu, "").trim();
   if (name.length === 0 || name.length > MAX_FILE_NAME_LENGTH) return null;
   return name;
 }
@@ -57,7 +62,7 @@ async function clearAbandoned(projectId: string): Promise<void> {
     .where(
       and(
         eq(attachments.projectId, projectId),
-        eq(attachments.status, "pending"),
+        inArray(attachments.status, ["pending", "removed"]),
         lt(attachments.createdAt, sql`now() - ${ABANDONED_AFTER}`),
       ),
     );
@@ -81,9 +86,8 @@ export async function startUpload(
 
   const project = await findProject(userId, projectId);
   if (!project) return { ok: false, error: NO_ACCESS };
-  if (project.finishedAt) return { ok: false, error: "This project is finished." };
-
   await clearAbandoned(projectId);
+  if (project.finishedAt) return { ok: false, error: "This project is finished." };
 
   const id = randomUUID();
   const storageKey = `attachments/${projectId}/${id}`;
@@ -127,10 +131,11 @@ export async function finishUpload(userId: string, attachmentId: string): Promis
     );
   if (!upload) return { ok: false, error: NOT_FOUND };
 
+  // A failed upload stays pending. Its link may still work for a few minutes, so deleting the
+  // record now would let a late file land with nothing pointing at it; clearAbandoned removes
+  // both once the link has expired.
   const size = await storedSize(upload.storageKey);
   if (size !== upload.size) {
-    if (size !== null) await deleteStored(upload.storageKey);
-    await getDb().delete(attachments).where(eq(attachments.id, upload.id));
     return { ok: false, error: "The upload did not arrive complete. Please try again." };
   }
 
@@ -200,16 +205,29 @@ export async function downloadLink(userId: string, attachmentId: string): Promis
 /** The uploader or the project's owner can remove a file. The stored copy goes first. */
 export async function removeAttachment(userId: string, attachmentId: string): Promise<Result> {
   const [file] = await getDb()
-    .select({ id: attachments.id, storageKey: attachments.storageKey })
+    .select({
+      id: attachments.id,
+      storageKey: attachments.storageKey,
+      linkMayWork: sql<boolean>`${attachments.createdAt} >= now() - ${ABANDONED_AFTER}`,
+    })
     .from(attachments)
     .innerJoin(projects, eq(projects.id, attachments.projectId))
     .where(
       and(
         eq(attachments.id, attachmentId),
+        // Only finished files: a pending one's link may still work, so clearAbandoned removes it.
+        eq(attachments.status, "ready"),
         or(eq(attachments.uploaderId, userId), eq(projects.ownerId, userId)),
       ),
     );
   if (!file) return { ok: false, error: NOT_FOUND };
+
+  // Its upload link may still work, so a file sent to it now would land with nothing pointing at
+  // it. Marked removed instead, it is never shown again and clearAbandoned deletes it later.
+  if (file.linkMayWork) {
+    await getDb().update(attachments).set({ status: "removed" }).where(eq(attachments.id, file.id));
+    return { ok: true };
+  }
 
   await deleteStored(file.storageKey);
   await getDb().delete(attachments).where(eq(attachments.id, file.id));

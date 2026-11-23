@@ -45,7 +45,7 @@ Proposed by Claude in PR 6a, 2026-11-11, and confirmed by the owner, 2026-11-12.
 
 - The owner and the sender can both add files, only while the project is active. Old files stay downloadable after Finish.
 - The uploader or the project's owner can remove a file.
-- At most 20 files per project. Upload and download links work for 5 minutes. An upload not finished within an hour is cleared away.
+- At most 20 files per project. Upload and download links work for 5 minutes. An upload not finished within an hour is cleared away (10 minutes since PR 7e, see below).
 - Files can only be added once a task is accepted, so a waiting task has no files.
 
 Proposed by Claude in the PR 6b plan and chosen by the owner ("go and apply your recommendations"), 2026-11-14.
@@ -212,3 +212,10 @@ Chosen by Claude while building PR 7d, 2026-11-23, for the owner to confirm in r
 
 - The test walks with the "Go to check-in machine" and "Go to check-out machine" buttons, not by tapping the 3D floor at a spot, which breaks whenever the camera moves.
 - The tests run against the built app (`next build` and `next start`) on port 3100, and empty the `_test` database before each test.
+
+Chosen by Claude while building PR 7e fix A (uploads), 2026-11-23, for the owner to confirm in review. The owner asked Claude to make all the review's fixes.
+
+- A failed upload stays pending instead of being deleted at once, and is cleared 10 minutes after it started (upload links last 5). Deleting it while its link still worked could leave a stored file nothing points at.
+- Removing a file works only on finished files; pending ones are left to that clean-up. A file or picture removed or replaced in its first 10 minutes is marked "removed" (a new status, one migration) and deleted by the same clean-up, so finishing it again cannot bring it back. Older ones are deleted at once, as before.
+- A profile picture's first bytes are checked again every time it is sent, rather than copying each upload to a second key, because the bytes could be replaced while the upload link still works. A project file is not checked again: only its uploader could replace it, with a file of the same size, in those few minutes.
+- File names also lose invisible formatting characters, such as right-to-left marks.
