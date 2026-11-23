@@ -51,6 +51,9 @@ describe("file names and sizes", () => {
     expect(cleanFileName("C:\\Users\\me\\plan.pdf")).toBe("plan.pdf");
     expect(cleanFileName("../../etc/passwd")).toBe("passwd");
     expect(cleanFileName("a\nb\u0000.txt")).toBe("ab.txt");
+    expect(cleanFileName("invoice\u202efdp.exe")).toBe("invoicefdp.exe");
+    expect(cleanFileName("a\u200bb\u2066c\ufeff.txt")).toBe("abc.txt");
+    expect(cleanFileName("\u202e\u200b")).toBeNull();
     expect(cleanFileName("  ")).toBeNull();
     expect(cleanFileName("x".repeat(201))).toBeNull();
   });
@@ -157,14 +160,15 @@ describe.skipIf(!canUseDatabase)("attachments", () => {
       expect(results.filter((result) => result.ok)).toHaveLength(MAX_FILES_PER_PROJECT);
     });
 
-    it("clears uploads abandoned for an hour, so they stop counting", async () => {
+    it("clears uploads abandoned once their links expired, so they stop counting", async () => {
       for (let i = 0; i < MAX_FILES_PER_PROJECT; i += 1) {
         await startUpload(ownerId, projectId, choice());
       }
       expect(await startUpload(ownerId, projectId, choice())).toMatchObject({ ok: false });
+      // Upload links last five minutes; after ten, nothing can still arrive.
       await getDb()
         .update(attachments)
-        .set({ createdAt: sql`now() - interval '2 hours'` });
+        .set({ createdAt: sql`now() - interval '11 minutes'` });
       expect(await startUpload(ownerId, projectId, choice())).toMatchObject({ ok: true });
       expect(bucket.deleted).toHaveLength(MAX_FILES_PER_PROJECT);
       expect(await getDb().select().from(attachments)).toHaveLength(1);
@@ -178,21 +182,31 @@ describe.skipIf(!canUseDatabase)("attachments", () => {
       expect(row).toMatchObject({ id, status: "ready" });
     });
 
-    it("throws away an upload of the wrong size, in the bucket and in the database", async () => {
+    it("never makes an upload of the wrong size ready", async () => {
       const started = await startUpload(ownerId, projectId, choice(100));
       if (!started.ok) throw new Error(started.error);
       const [row] = await getDb().select().from(attachments);
       bucket.sizes.set(row.storageKey, 999);
       expect(await finishUpload(ownerId, started.id)).toMatchObject({ ok: false });
-      expect(bucket.deleted).toEqual([row.storageKey]);
-      expect(await getDb().select().from(attachments)).toEqual([]);
+      expect(await getDb().select().from(attachments)).toMatchObject([{ status: "pending" }]);
+      expect((await filesByProject(ownerId, [projectId])).size).toBe(0);
     });
 
-    it("clears the record when nothing arrived", async () => {
+    it("keeps the record when nothing arrived yet, so a late file is still cleared", async () => {
       const started = await startUpload(ownerId, projectId, choice());
       if (!started.ok) throw new Error(started.error);
       expect(await finishUpload(ownerId, started.id)).toMatchObject({ ok: false });
-      expect(await getDb().select().from(attachments)).toEqual([]);
+      const [row] = await getDb().select().from(attachments);
+      expect(row.status).toBe("pending");
+
+      // The link still works for a few minutes: the file arrives after all.
+      bucket.sizes.set(row.storageKey, 100);
+      await getDb()
+        .update(attachments)
+        .set({ createdAt: sql`now() - interval '11 minutes'` });
+      await startUpload(ownerId, projectId, choice());
+      expect(bucket.deleted).toEqual([row.storageKey]);
+      expect(bucket.sizes.has(row.storageKey)).toBe(false);
     });
 
     it("only lets the uploader finish their own upload", async () => {
@@ -243,8 +257,42 @@ describe.skipIf(!canUseDatabase)("attachments", () => {
 
       expect(await removeAttachment(ownerId, bySender)).toEqual({ ok: true });
       expect(await removeAttachment(ownerId, byOwner)).toEqual({ ok: true });
+      expect((await filesByProject(ownerId, [projectId])).size).toBe(0);
+      expect(await removeAttachment(ownerId, byOwner)).toMatchObject({ ok: false });
+
+      // Their upload links may still work, so the stored copies go once the links have expired.
+      expect(bucket.deleted).toEqual([]);
+      await getDb()
+        .update(attachments)
+        .set({ createdAt: sql`now() - interval '11 minutes'` });
+      await startUpload(ownerId, projectId, choice());
       expect(bucket.deleted).toHaveLength(2);
+      expect(await getDb().select().from(attachments)).toHaveLength(1);
+    });
+
+    it("cannot bring a removed file back by finishing it again", async () => {
+      const id = await uploadAs(senderId);
+      await removeAttachment(ownerId, id);
+      expect(await finishUpload(senderId, id)).toMatchObject({ ok: false });
+      expect((await filesByProject(ownerId, [projectId])).size).toBe(0);
+    });
+
+    it("deletes an old file's stored copy at once", async () => {
+      const id = await uploadAs(ownerId);
+      await getDb()
+        .update(attachments)
+        .set({ createdAt: sql`now() - interval '11 minutes'` });
+      expect(await removeAttachment(ownerId, id)).toEqual({ ok: true });
+      expect(bucket.deleted).toHaveLength(1);
       expect(await getDb().select().from(attachments)).toEqual([]);
+    });
+
+    it("leaves an unfinished upload for the clean-up, whose link may still work", async () => {
+      const started = await startUpload(ownerId, projectId, choice());
+      if (!started.ok) throw new Error(started.error);
+      expect(await removeAttachment(ownerId, started.id)).toMatchObject({ ok: false });
+      expect(bucket.deleted).toEqual([]);
+      expect(await getDb().select().from(attachments)).toHaveLength(1);
     });
 
     it("tells the sender which files they may remove", async () => {

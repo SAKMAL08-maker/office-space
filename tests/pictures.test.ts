@@ -4,6 +4,7 @@ import { getDb } from "@/db/client";
 import { invites, MAX_PICTURE_BYTES, profilePictures, users } from "@/db/schema";
 import { acceptInvite, createInvite } from "@/server/invites";
 import {
+  checkedPicture,
   currentPictureId,
   finishPictureUpload,
   pictureSizeProblem,
@@ -79,6 +80,25 @@ describe("what a picture really is", () => {
     expect(pictureType(bytes("RIFF", [0, 0, 0, 0], "WAVEfmt "))).toBeNull();
     expect(pictureType(bytes([0x89, 0x50, 0x4e, 0x47]))).toBeNull();
     expect(pictureType(new Uint8Array())).toBeNull();
+  });
+
+  it("passes a stored picture on only while its first bytes match, however it is split", async () => {
+    // One byte at a time, so the check has to gather the first bytes across many pieces.
+    const trickle = (content: Uint8Array) =>
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          for (const byte of content) controller.enqueue(new Uint8Array([byte]));
+          controller.close();
+        },
+      });
+    const read = async (stream: ReadableStream<Uint8Array> | null) =>
+      stream && new Uint8Array(await new Response(stream).arrayBuffer());
+
+    expect(await read(await checkedPicture(trickle(PNG), "image/png"))).toEqual(PNG);
+    expect(await read(await checkedPicture(new Blob([WEBP]).stream(), "image/webp"))).toEqual(WEBP);
+    expect(await checkedPicture(trickle(PNG), "image/jpeg")).toBeNull();
+    expect(await checkedPicture(trickle(HTML), "image/png")).toBeNull();
+    expect(await checkedPicture(trickle(new Uint8Array()), "image/png")).toBeNull();
   });
 
   it("refuses empty, over-size and odd sizes", () => {
@@ -196,20 +216,21 @@ describe.skipIf(!canUseDatabase)("profile pictures", () => {
       }
     });
 
-    it("refuses and deletes an SVG, a web page or text, whatever its name", async () => {
+    it("refuses an SVG, a web page or text, whatever its name, and never shows it", async () => {
       for (const content of [SVG, HTML, bytes("hello")]) {
-        const { id, finished } = await uploadAs(memberId, content);
+        const { finished } = await uploadAs(memberId, content);
         expect(finished).toEqual({
           ok: false,
           error: expect.stringContaining("PNG, JPEG or WebP"),
         });
-        expect(bucket.deleted).toContain(`pictures/${memberId}/${id}`);
       }
-      expect(await getDb().select().from(profilePictures)).toEqual([]);
+      expect(await getDb().select().from(profilePictures)).toMatchObject(
+        Array(3).fill({ status: "pending" }),
+      );
       expect(await currentPictureId(memberId)).toBeNull();
     });
 
-    it("throws away an upload that is missing or the wrong size", async () => {
+    it("keeps a missing or wrong-size upload pending, so a late file is still cleared", async () => {
       const missing = await startPictureUpload(memberId, PNG.length);
       if (!missing.ok) throw new Error(missing.error);
       expect(await finishPictureUpload(memberId, missing.id)).toMatchObject({ ok: false });
@@ -218,8 +239,18 @@ describe.skipIf(!canUseDatabase)("profile pictures", () => {
       if (!short.ok) throw new Error(short.error);
       bucket.files.set(await storageKey(short.id), PNG);
       expect(await finishPictureUpload(memberId, short.id)).toMatchObject({ ok: false });
+      expect(await currentPictureId(memberId)).toBeNull();
+
+      // The first link still works for a few minutes: the file arrives after all.
+      const lateKey = await storageKey(missing.id);
+      bucket.files.set(lateKey, PNG);
+      await getDb().execute(
+        sql`update profile_pictures set created_at = now() - interval '11 minutes'`,
+      );
+      await startPictureUpload(memberId, 100);
+      expect(bucket.deleted).toContain(lateKey);
       expect(bucket.files.size).toBe(0);
-      expect(await getDb().select().from(profilePictures)).toEqual([]);
+      expect(await getDb().select().from(profilePictures)).toHaveLength(1);
     });
 
     it("does not let anyone else finish someone's upload", async () => {
@@ -231,14 +262,35 @@ describe.skipIf(!canUseDatabase)("profile pictures", () => {
       expect(await currentPictureId(adminId)).toBeNull();
     });
 
-    it("swaps in a new picture and deletes the old one", async () => {
+    it("swaps in a new picture and deletes the old one once its link has expired", async () => {
       const first = await uploadAs(memberId);
       const firstKey = await storageKey(first.id);
       const second = await uploadAs(memberId, JPEG);
       expect(second.finished).toEqual({ ok: true });
       expect(await currentPictureId(memberId)).toBe(second.id);
-      expect(bucket.deleted).toContain(firstKey);
-      expect(bucket.files.has(firstKey)).toBe(false);
+
+      // The first link may still work, so the old picture is only marked removed for now,
+      // and finishing it again cannot bring it back.
+      expect(bucket.files.has(firstKey)).toBe(true);
+      expect(await finishPictureUpload(memberId, first.id)).toMatchObject({ ok: false });
+      expect(await currentPictureId(memberId)).toBe(second.id);
+
+      await getDb().execute(
+        sql`update profile_pictures set created_at = now() - interval '11 minutes'`,
+      );
+      await startPictureUpload(memberId, 100);
+      expect(bucket.deleted).toEqual([firstKey]);
+      expect(await currentPictureId(memberId)).toBe(second.id);
+    });
+
+    it("deletes an old picture at once when it is replaced", async () => {
+      const first = await uploadAs(memberId);
+      const firstKey = await storageKey(first.id);
+      await getDb().execute(
+        sql`update profile_pictures set created_at = now() - interval '11 minutes'`,
+      );
+      await uploadAs(memberId, JPEG);
+      expect(bucket.deleted).toEqual([firstKey]);
       expect(await getDb().select().from(profilePictures)).toHaveLength(1);
     });
 
@@ -268,13 +320,32 @@ describe.skipIf(!canUseDatabase)("profile pictures", () => {
   });
 
   describe("removing", () => {
-    it("removes the picture and its stored copy", async () => {
+    it("removes the picture, and its stored copy once its link has expired", async () => {
       const { id } = await uploadAs(memberId);
       const key = await storageKey(id);
       expect(await removePicture(memberId)).toEqual({ ok: true });
       expect(await currentPictureId(memberId)).toBeNull();
-      expect(bucket.files.has(key)).toBe(false);
       expect(await removePicture(memberId)).toMatchObject({ ok: false });
+      // Finishing it again cannot bring a removed picture back.
+      expect(await finishPictureUpload(memberId, id)).toMatchObject({ ok: false });
+      expect(await currentPictureId(memberId)).toBeNull();
+
+      await getDb().execute(
+        sql`update profile_pictures set created_at = now() - interval '11 minutes'`,
+      );
+      await startPictureUpload(memberId, 100);
+      expect(bucket.files.has(key)).toBe(false);
+    });
+
+    it("removes an old picture's stored copy at once", async () => {
+      const { id } = await uploadAs(memberId);
+      const key = await storageKey(id);
+      await getDb().execute(
+        sql`update profile_pictures set created_at = now() - interval '11 minutes'`,
+      );
+      expect(await removePicture(memberId)).toEqual({ ok: true });
+      expect(bucket.files.has(key)).toBe(false);
+      expect(await getDb().select().from(profilePictures)).toEqual([]);
     });
 
     it("lets only an admin remove someone else's picture", async () => {
@@ -368,6 +439,15 @@ describe.skipIf(!canUseDatabase)("profile pictures", () => {
         "content-security-policy": "default-src 'none'; sandbox",
         "cache-control": "private, max-age=31536000, immutable",
       });
+    });
+
+    it("refuses a picture whose bytes were swapped after the check", async () => {
+      const { id } = await uploadAs(memberId);
+      request.cookie = (await logIn("ada@example.com", PASSWORD)) ?? "";
+      bucket.files.set(await storageKey(id), HTML);
+      expect((await get(id)).status).toBe(404);
+      bucket.files.set(await storageKey(id), JPEG);
+      expect((await get(id)).status).toBe(404);
     });
 
     it("answers 404 for a removed, replaced, pending or made-up picture", async () => {
