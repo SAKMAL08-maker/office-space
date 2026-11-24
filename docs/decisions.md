@@ -219,3 +219,8 @@ Chosen by Claude while building PR 7e fix A (uploads), 2026-11-23, for the owner
 - Removing a file works only on finished files; pending ones are left to that clean-up. A file or picture removed or replaced in its first 10 minutes is marked "removed" (a new status, one migration) and deleted by the same clean-up, so finishing it again cannot bring it back. Older ones are deleted at once, as before.
 - A profile picture's first bytes are checked again every time it is sent, rather than copying each upload to a second key, because the bytes could be replaced while the upload link still works. A project file is not checked again: only its uploader could replace it, with a file of the same size, in those few minutes.
 - File names also lose invisible formatting characters, such as right-to-left marks.
+
+Chosen by Claude while building PR 7e fix B (security headers), 2026-11-24, for the owner to confirm in review.
+
+- Every path gets `frame-ancestors 'none'` plus `X-Frame-Options: DENY`, `nosniff`, `strict-origin-when-cross-origin` and a Permissions-Policy turning off camera, microphone, location, payment and USB. A full script policy (CSP with nonces) is left for later: it would make every page dynamic and needs testing against the 3D scene.
+- Because Next.js drops a route's header when the config already set it, the picture route's sandbox policy and the download route's no-referrer are repeated in `next.config.ts`, and a test checks them.
