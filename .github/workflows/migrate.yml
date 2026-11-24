@@ -12,6 +12,9 @@ concurrency: migrate-production
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    # The production secret is stored only in this GitHub Environment, which waits for the owner
+    # to approve each run. Any other workflow, on any branch, cannot read it.
+    environment: production
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -24,7 +27,7 @@ jobs:
           DATABASE_URL: ${{ secrets.MIGRATE_DATABASE_URL }}
         run: |
           if [ -z "$DATABASE_URL" ]; then
-            echo "The MIGRATE_DATABASE_URL secret is not set."
+            echo "The MIGRATE_DATABASE_URL secret is not set in the production environment."
             exit 1
           fi
           npm run db:migrate
