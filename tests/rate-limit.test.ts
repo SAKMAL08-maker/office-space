@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { clientIp, takeTry, TRIES_PER_WINDOW, TRY_WINDOW_SECONDS } from "@/server/rate-limit";
+import {
+  clientIp,
+  takeTry,
+  takeUserTry,
+  TRIES_PER_WINDOW,
+  TRY_WINDOW_SECONDS,
+  USER_TRIES,
+} from "@/server/rate-limit";
 import { tooManyTries } from "@/ui/form-state";
 import { createFirstAdmin } from "@/server/setup";
 import {
@@ -92,5 +99,20 @@ describe.skipIf(!canUseDatabase)("counting tries", () => {
     const wait = Number(refused.headers.get("X-Retry-After"));
     expect(wait).toBeGreaterThan(0);
     expect(wait).toBeLessThanOrEqual(TRY_WINDOW_SECONDS);
+  });
+
+  it("takes a different limit when asked", async () => {
+    const now = 1_800_000_000_000;
+    for (let i = 0; i < 12; i++) expect(await takeTry("user:a|x", now, 12)).toEqual({ ok: true });
+    expect(await takeTry("user:a|x", now, 12)).toMatchObject({ ok: false });
+  });
+
+  it("counts each person and each logged-in action on its own", async () => {
+    for (let i = 0; i < USER_TRIES.presence; i++) {
+      expect(await takeUserTry("person-1", "presence")).toEqual({ ok: true });
+    }
+    expect(await takeUserTry("person-1", "presence")).toMatchObject({ ok: false });
+    expect(await takeUserTry("person-2", "presence")).toEqual({ ok: true });
+    expect(await takeUserTry("person-1", "upload")).toEqual({ ok: true });
   });
 });

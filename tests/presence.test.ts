@@ -8,6 +8,7 @@ import { getFloor } from "@/server/floor";
 import { acceptInvite, createInvite } from "@/server/invites";
 import { listPresence, parseSpot } from "@/server/presence";
 import { createProject, listProjects } from "@/server/projects";
+import { USER_TRIES } from "@/server/rate-limit";
 import { createFirstAdmin } from "@/server/setup";
 import { startWork } from "@/server/work";
 import {
@@ -110,6 +111,17 @@ describe.skipIf(!canUseDatabase)("presence", () => {
       digest: expect.stringContaining(";/;"),
     });
     expect(await getDb().select().from(presence)).toEqual([]);
+  });
+
+  it("refuses a person sending too many beats, with how long to wait", async () => {
+    await logInAsMember();
+    await checkIn(memberId);
+    for (let i = 0; i < USER_TRIES.presence; i++) {
+      expect((await post({ spot: null })).status).toBe(200);
+    }
+    const refused = await post({ spot: null });
+    expect(refused.status).toBe(429);
+    expect(Number(refused.headers.get("Retry-After"))).toBeGreaterThan(0);
   });
 
   it("refuses a made-up body without saving anything", async () => {
