@@ -3,7 +3,7 @@ import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { projects, tasks, users } from "@/db/schema";
 import { insertProjectWithCubicle, TOO_MANY_PROJECTS } from "./projects";
-import { lockUser } from "./users";
+import { lockUsers } from "./users";
 import { MAX_REJECT_REASON_LENGTH, type Result, workDetailsProblem } from "./validation";
 
 export const MAX_WAITING_TASKS = 10;
@@ -31,13 +31,11 @@ export async function sendTask(
   }
 
   return getDb().transaction(async (tx): Promise<Result> => {
-    // Without this lock, two sends at once could both see 9 waiting and make 11.
-    await lockUser(tx, senderId);
-    const [receiver] = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, receiverId));
-    if (!receiver) return { ok: false, error: "That person could not be found." };
+    // Locking the sender stops two sends at once both seeing 9 waiting and making 11. Locking the
+    // receiver lines this up with disabling them, so no task can arrive after that cancelled theirs.
+    const enabled = await lockUsers(tx, [senderId, receiverId]);
+    if (!enabled.has(receiverId)) return { ok: false, error: "That person could not be found." };
+    if (!enabled.has(senderId)) return { ok: false, error: "Your account is disabled." };
 
     const [{ waiting }] = await tx
       .select({ waiting: count() })

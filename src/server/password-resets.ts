@@ -23,11 +23,12 @@ export async function createPasswordResetLink(input: {
 }): Promise<Result<{ token: string }>> {
   const db = getDb();
   const found = await db
-    .select({ id: users.id })
+    .select({ id: users.id, disabledAt: users.disabledAt })
     .from(users)
     .where(eq(users.id, input.userId))
     .limit(1);
   if (found.length === 0) return { ok: false, error: "That person no longer exists." };
+  if (found[0].disabledAt) return { ok: false, error: "Enable this account first." };
 
   const token = newToken();
   await db.transaction(async (tx) => {
@@ -58,7 +59,9 @@ export async function findUsableResetLink(token: string): Promise<{ email: strin
     .select({ email: users.email })
     .from(passwordResetLinks)
     .innerJoin(users, eq(users.id, passwordResetLinks.userId))
-    .where(and(eq(passwordResetLinks.tokenHash, hashToken(token)), isUsable))
+    .where(
+      and(eq(passwordResetLinks.tokenHash, hashToken(token)), isUsable, isNull(users.disabledAt)),
+    )
     .limit(1);
   return found[0] ?? null;
 }

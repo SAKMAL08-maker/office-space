@@ -8,12 +8,17 @@ import { requireAdmin } from "@/server/session";
 import { ActionButton } from "@/ui/action-button";
 import { Avatar } from "@/ui/avatar";
 import { Loading, quietButtonClass } from "@/ui/form-parts";
-import { removePictureAction, revokeInviteAction } from "./actions";
+import {
+  disableAccountAction,
+  enableAccountAction,
+  removePictureAction,
+  revokeInviteAction,
+} from "./actions";
 import { InviteForm } from "./invite-form";
 import { ResetLinkForm } from "./reset-link-form";
 
 async function PeopleContent() {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const [people, pending] = await Promise.all([
     getDb()
       .select({
@@ -21,6 +26,7 @@ async function PeopleContent() {
         name: users.name,
         email: users.email,
         role: users.role,
+        disabledAt: users.disabledAt,
         pictureId: profilePictures.id,
       })
       .from(users)
@@ -83,11 +89,30 @@ async function PeopleContent() {
                   <p className="font-medium break-words">{person.name}</p>
                   <p className="text-sm break-all text-zinc-600 dark:text-zinc-400">
                     {person.email}, {person.role}
+                    {person.disabledAt && ", disabled"}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-start gap-2">
-                <ResetLinkForm userId={person.id} />
+                {person.disabledAt ? (
+                  <ActionButton
+                    action={enableAccountAction}
+                    id={person.id}
+                    label="Enable account"
+                  />
+                ) : (
+                  <>
+                    <ResetLinkForm userId={person.id} />
+                    {person.id !== admin.id && (
+                      <ActionButton
+                        action={disableAccountAction}
+                        id={person.id}
+                        label="Disable account"
+                        confirm={`Disable ${person.name}? They are logged out everywhere, checked out, and their waiting tasks are cancelled.`}
+                      />
+                    )}
+                  </>
+                )}
                 {person.pictureId && (
                   <ActionButton
                     action={removePictureAction}

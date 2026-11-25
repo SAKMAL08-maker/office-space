@@ -1,9 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { TRIES_PER_WINDOW, TRY_WINDOW_SECONDS } from "./rate-limit";
-import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./validation";
+import { ACCOUNT_DISABLED, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./validation";
+
+export const SESSION_LIFETIME_SECONDS = 24 * 60 * 60;
 
 /** The address of this deployment. Links are built from it, never from a request's Host header. */
 export function appBaseUrl(): string {
@@ -61,10 +65,36 @@ function createAuth() {
         "/sign-in/*": { window: TRY_WINDOW_SECONDS, max: TRIES_PER_WINDOW },
       },
     },
+    session: {
+      // A login ends after a day without use, so a lost laptop is logged out by the next day.
+      expiresIn: SESSION_LIFETIME_SECONDS,
+      // Each use moves that day forward, but the database is written at most once an hour.
+      updateAge: 60 * 60,
+    },
     user: {
       additionalFields: {
-        // input: false means a browser can never set this field.
+        // input: false means a browser can never set these fields.
         role: { type: "string", required: false, defaultValue: "member", input: false },
+        disabledAt: { type: "date", required: false, input: false },
+      },
+    },
+    databaseHooks: {
+      session: {
+        create: {
+          // Runs only after the password was right, so it tells nothing to someone guessing.
+          before: async (session) => {
+            const [user] = await getDb()
+              .select({ disabledAt: schema.users.disabledAt })
+              .from(schema.users)
+              .where(eq(schema.users.id, session.userId));
+            if (!user || user.disabledAt) {
+              throw new APIError("FORBIDDEN", {
+                code: ACCOUNT_DISABLED,
+                message: "This account is disabled.",
+              });
+            }
+          },
+        },
       },
     },
   });

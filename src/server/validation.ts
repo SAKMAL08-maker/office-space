@@ -3,6 +3,8 @@ export const MAX_PASSWORD_LENGTH = 128;
 export const MAX_TITLE_LENGTH = 120;
 export const MAX_DESCRIPTION_LENGTH = 2000;
 export const MAX_REJECT_REASON_LENGTH = 500;
+/** The code the login route sends when the password was right but an admin disabled the account. */
+export const ACCOUNT_DISABLED = "ACCOUNT_DISABLED";
 
 export type Role = "admin" | "member";
 export type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
