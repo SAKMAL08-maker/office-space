@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { finishPictureUpload, removePicture, startPictureUpload } from "@/server/pictures";
+import { takeUserTry } from "@/server/rate-limit";
 import { requireUser } from "@/server/session";
 import { UPLOAD_HEADERS } from "@/server/storage";
-import type { FormState } from "@/ui/form-state";
+import { type FormState, tooManyTries } from "@/ui/form-state";
 
 // Server actions can be called directly, so each one checks the login itself. A picture belongs
 // to the account, so being logged in is enough; checking in is not needed.
@@ -20,6 +21,8 @@ function refreshPicturePages() {
 
 export async function startPictureAction(size: number): Promise<StartedPicture> {
   const user = await requireUser();
+  const allowed = await takeUserTry(user.id, "upload");
+  if (!allowed.ok) return { error: tooManyTries(allowed.retryAfter) };
   const result = await startPictureUpload(user.id, Number(size));
   if (!result.ok) return { error: result.error };
   return { id: result.id, url: result.url, headers: { ...UPLOAD_HEADERS } };
@@ -28,6 +31,8 @@ export async function startPictureAction(size: number): Promise<StartedPicture> 
 /** Called after the browser's upload, whether or not it worked, so the server can check or tidy up. */
 export async function finishPictureAction(pictureId: string): Promise<FormState> {
   const user = await requireUser();
+  const allowed = await takeUserTry(user.id, "upload");
+  if (!allowed.ok) return { error: tooManyTries(allowed.retryAfter) };
   const result = await finishPictureUpload(user.id, String(pictureId));
   refreshPicturePages();
   return result.ok ? {} : { error: result.error };
