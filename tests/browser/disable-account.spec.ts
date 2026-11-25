@@ -1,11 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { type BrowserContext, expect, test } from "@playwright/test";
 import { createFirstAdmin, emptyDatabase, logIn } from "./helpers";
 
 // One screen size is enough: the People page is the same list on every screen.
 test.skip(({ isMobile }) => isMobile, "The People page has no phone layout of its own.");
 
+/** Mo's own browser. Closed after the test even if it fails, or its 3D page slows later tests. */
+let moBrowser: BrowserContext | undefined;
+
 test.beforeEach(async () => {
   await emptyDatabase();
+});
+
+test.afterEach(async () => {
+  await moBrowser?.close();
+  moBrowser = undefined;
 });
 
 const MEMBER = { name: "Mo Member", email: "mo@example.test", password: "another long password" };
@@ -23,7 +31,8 @@ test("an admin disables someone, who can no longer log in, then enables them", a
   await page.getByRole("button", { name: "Create invite link" }).click();
   const link = await page.getByRole("textbox", { name: "Link to send" }).inputValue();
 
-  const mo = await (await browser.newContext()).newPage();
+  moBrowser = await browser.newContext();
+  const mo = await moBrowser.newPage();
   await mo.goto(link);
   await mo.getByLabel("Your name").fill(MEMBER.name);
   await mo.getByLabel(/^Choose a password/).fill(MEMBER.password);
