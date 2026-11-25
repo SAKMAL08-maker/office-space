@@ -236,3 +236,7 @@ Chosen by Claude while building PR 7e fix C (limits), 2026-11-24, for the owner 
 - Each person may have 30 active projects (cubicles). Creating, accepting a task and reopening are refused past that; a refused accept leaves the task waiting. Finished projects do not count.
 - The floor loads only the cubicles of the offices it shows, at most 200 × 30.
 - Logged-in limits are per person, never per IP, so an office sharing one network is never blocked: presence 20 a minute (a tab sends 6), upload start and finish together 30 a minute. They use the same `rate_limits` table as the form limits. A refused presence beat is answered 429 and the tab simply tries again on its next beat.
+
+Chosen by Claude while building PR 7e fix E (migrate approval), 2026-11-24, for the owner to confirm in review.
+
+- The production secret moves into a GitHub Environment `production` with the owner as required reviewer, and the repository secret is deleted. No branch restriction on the environment, because migrations run from the PR branch before merging; the approval is the check instead.
