@@ -219,3 +219,9 @@ Chosen by Claude while building PR 7e fix A (uploads), 2026-11-23, for the owner
 - Removing a file works only on finished files; pending ones are left to that clean-up. A file or picture removed or replaced in its first 10 minutes is marked "removed" (a new status, one migration) and deleted by the same clean-up, so finishing it again cannot bring it back. Older ones are deleted at once, as before.
 - A profile picture's first bytes are checked again every time it is sent, rather than copying each upload to a second key, because the bytes could be replaced while the upload link still works. A project file is not checked again: only its uploader could replace it, with a file of the same size, in those few minutes.
 - File names also lose invisible formatting characters, such as right-to-left marks.
+
+Chosen by the owner for PR 7e, 2026-11-23.
+
+- The review's findings stay outside the repo, in a private file on the owner's laptop, until they are fixed; a short summary goes into `docs/` afterwards. Why: the repo is public (Claude's recommendation, accepted).
+- The review was split between two read-only subagents, with Claude re-checking their findings. Why: the owner asked for Claude's recommendation.
+- Claude builds all of the review's fixes, one PR each; the owner keeps the merges and says yes to each dashboard or GitHub setting change. Why: the owner asked Claude to do the work on its own.
