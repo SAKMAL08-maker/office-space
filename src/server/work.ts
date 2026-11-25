@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { getDb, type Tx } from "@/db/client";
 import { attendanceSessions, cubicles, projects, workSessions } from "@/db/schema";
-import { lockUser } from "./users";
+import { lockEnabledUser } from "./users";
 import type { Result } from "./validation";
 
 const WORK_LOG_LIMIT = 200;
@@ -32,7 +32,8 @@ export async function endProjectWork(tx: Tx, projectId: string): Promise<void> {
  */
 export function startWork(userId: string, projectId: string): Promise<Result> {
   return getDb().transaction(async (tx): Promise<Result> => {
-    await lockUser(tx, userId);
+    if (!(await lockEnabledUser(tx, userId)))
+      return { ok: false, error: "Your account is disabled." };
     const checkedIn = await tx
       .select({ id: attendanceSessions.id })
       .from(attendanceSessions)

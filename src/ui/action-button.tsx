@@ -10,16 +10,25 @@ export function ActionButton({
   id,
   label,
   primary = false,
+  confirm,
 }: {
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   id: string;
   label: string;
   primary?: boolean;
+  /** If given, the browser asks this question first and does nothing unless the answer is OK. */
+  confirm?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="flex flex-col gap-1">
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        if (confirm && !window.confirm(confirm)) event.preventDefault();
+      }}
+      className="flex flex-col gap-1"
+    >
       <input type="hidden" name="id" value={id} />
       <div>
         <button

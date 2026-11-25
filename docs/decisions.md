@@ -240,3 +240,16 @@ Chosen by Claude while building PR 7e fix C (limits), 2026-11-24, for the owner 
 Chosen by Claude while building PR 7e fix E (migrate approval), 2026-11-24, for the owner to confirm in review.
 
 - The production secret moves into a GitHub Environment `production` with the owner as required reviewer, and the repository secret is deleted. No branch restriction on the environment, because migrations run from the PR branch before merging; the approval is the check instead.
+
+Chosen by the owner from Claude's options when planning PR 7e fix F (disable account), 2026-11-25.
+
+- Disabling someone who is checked in or working checks them out and ends their work period at that moment, in the same transaction. This is the one exception to "only the owner closes their record".
+- A login ends after one day without use (it used to be seven days, renewed on every use).
+
+Chosen by Claude while building PR 7e fix F, 2026-11-25, for the owner to confirm in review.
+
+- Disabling also cancels tasks waiting to or from the person and voids their unused reset link. Their projects, cubicles, files and time log stay. Enabling gives everything back except those cancelled tasks.
+- An admin cannot disable their own account or the last enabled admin. Disable asks "are you sure?" first; Enable does not.
+- A disabled person who types the right password is told the account is disabled. A wrong password still gets the usual message, so this tells a guesser nothing.
+- A reset link cannot be made for a disabled account: enable it first.
+- A login renews at most once an hour, so a day of use writes to the database a few times, not on every page.

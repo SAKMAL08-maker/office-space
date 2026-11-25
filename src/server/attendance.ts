@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
-import { getDb } from "@/db/client";
+import { getDb, type Tx } from "@/db/client";
 import { attendanceSessions, users } from "@/db/schema";
-import { lockUser } from "./users";
+import { lockEnabledUser, lockUser } from "./users";
 import type { Result } from "./validation";
 import { endOpenWork } from "./work";
 
@@ -25,15 +25,33 @@ export async function getOpenAttendance(userId: string): Promise<{ checkedInAt: 
   return found[0] ?? null;
 }
 
-/** Opens a record. The database's one-open-per-user rule is what refuses a double check-in. */
-export async function checkIn(userId: string): Promise<Result> {
-  const opened = await getDb()
-    .insert(attendanceSessions)
-    .values({ id: randomUUID(), userId })
-    .onConflictDoNothing()
+/**
+ * Opens a record. The database's one-open-per-user rule is what refuses a double check-in. The
+ * person's lock lines this up with disabling them, which closes the record they had open.
+ */
+export function checkIn(userId: string): Promise<Result> {
+  return getDb().transaction(async (tx): Promise<Result> => {
+    if (!(await lockEnabledUser(tx, userId))) {
+      return { ok: false, error: "Your account is disabled." };
+    }
+    const opened = await tx
+      .insert(attendanceSessions)
+      .values({ id: randomUUID(), userId })
+      .onConflictDoNothing()
+      .returning({ id: attendanceSessions.id });
+    if (opened.length === 0) return { ok: false, error: "You are still checked in." };
+    return { ok: true };
+  });
+}
+
+/** Closes the open record, if any, inside the caller's transaction. */
+export async function closeOpenAttendance(tx: Tx, userId: string): Promise<boolean> {
+  const closed = await tx
+    .update(attendanceSessions)
+    .set({ checkedOutAt: sql`now()` })
+    .where(and(eq(attendanceSessions.userId, userId), isOpen))
     .returning({ id: attendanceSessions.id });
-  if (opened.length === 0) return { ok: false, error: "You are still checked in." };
-  return { ok: true };
+  return closed.length > 0;
 }
 
 /**
@@ -44,12 +62,9 @@ export function checkOut(userId: string): Promise<Result> {
   return getDb().transaction(async (tx): Promise<Result> => {
     await lockUser(tx, userId);
     await endOpenWork(tx, userId);
-    const closed = await tx
-      .update(attendanceSessions)
-      .set({ checkedOutAt: sql`now()` })
-      .where(and(eq(attendanceSessions.userId, userId), isOpen))
-      .returning({ id: attendanceSessions.id });
-    if (closed.length === 0) return { ok: false, error: "You are not checked in." };
+    if (!(await closeOpenAttendance(tx, userId))) {
+      return { ok: false, error: "You are not checked in." };
+    }
     return { ok: true };
   });
 }

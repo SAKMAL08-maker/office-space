@@ -11,7 +11,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   // Reading the request first keeps this out of the build, where the auth secret may not exist.
   const requestHeaders = await headers();
   const session = await getAuth().api.getSession({ headers: requestHeaders });
-  if (!session) return null;
+  // Disabling deletes the sessions too; this also covers a request already under way.
+  if (!session || session.user.disabledAt) return null;
   const { id, name, email, role } = session.user;
   return { id, name, email, role: isRole(role) ? role : "member" };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { ACCOUNT_DISABLED } from "@/server/validation";
 import { authClient } from "@/ui/auth-client";
 import { buttonClass, Field, FormError, inputClass } from "@/ui/form-parts";
 import { tooManyTries } from "@/ui/form-state";
@@ -32,7 +33,9 @@ export function LoginForm() {
       setError(
         result.error.status === 429
           ? tooManyTries(wait.seconds)
-          : "That email or password is not right.",
+          : result.error.code === ACCOUNT_DISABLED
+            ? "This account is disabled. Ask an admin to enable it."
+            : "That email or password is not right.",
       );
       return;
     }

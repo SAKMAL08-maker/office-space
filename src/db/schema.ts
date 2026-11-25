@@ -32,6 +32,8 @@ export const users = pgTable(
     role: text("role", { enum: ["admin", "member"] })
       .notNull()
       .default("member"),
+    // Set when an admin disables the account. They cannot log in until an admin enables it.
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

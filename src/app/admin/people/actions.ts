@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { disableUser, enableUser } from "@/server/account-status";
 import { appBaseUrl } from "@/server/auth";
 import { createInvite, revokeInvite } from "@/server/invites";
 import { createPasswordResetLink } from "@/server/password-resets";
@@ -42,6 +43,28 @@ export async function createResetLinkAction(
   });
   if (!result.ok) return { error: result.error };
   return { link: `${appBaseUrl()}/reset/${result.token}` };
+}
+
+/** Logs someone out everywhere and stops them logging in, for example after a lost laptop. */
+export async function disableAccountAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const admin = await requireAdmin();
+  const result = await disableUser({ userId: textField(formData, "id"), adminId: admin.id });
+  revalidatePath("/admin/people");
+  revalidatePath("/");
+  return result.ok ? {} : { error: result.error };
+}
+
+export async function enableAccountAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const result = await enableUser(textField(formData, "id"));
+  revalidatePath("/admin/people");
+  return result.ok ? {} : { error: result.error };
 }
 
 /** Takes down someone's picture, for example one not suitable for work. Their initials show instead. */
