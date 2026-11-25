@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { finishUpload, removeAttachment, startUpload } from "@/server/attachments";
+import { takeUserTry } from "@/server/rate-limit";
 import { requireCheckedIn } from "@/server/session";
 import { UPLOAD_HEADERS } from "@/server/storage";
-import { type FormState, textField } from "@/ui/form-state";
+import { type FormState, textField, tooManyTries } from "@/ui/form-state";
 
 // Server actions can be called directly, so each one checks the gate itself.
 
@@ -22,6 +23,8 @@ export async function startUploadAction(
   size: number,
 ): Promise<StartedUpload> {
   const user = await requireCheckedIn();
+  const allowed = await takeUserTry(user.id, "upload");
+  if (!allowed.ok) return { error: tooManyTries(allowed.retryAfter) };
   const result = await startUpload(user.id, String(projectId), {
     fileName: String(fileName),
     size: Number(size),
@@ -33,6 +36,8 @@ export async function startUploadAction(
 /** Called after the browser's upload, whether or not it worked, so the server can check or tidy up. */
 export async function finishUploadAction(attachmentId: string): Promise<FormState> {
   const user = await requireCheckedIn();
+  const allowed = await takeUserTry(user.id, "upload");
+  if (!allowed.ok) return { error: tooManyTries(allowed.retryAfter) };
   const result = await finishUpload(user.id, String(attachmentId));
   refreshFilePages();
   return result.ok ? {} : { error: result.error };
