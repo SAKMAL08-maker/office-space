@@ -31,3 +31,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-24 | PR 7e fix C: at most 30 active projects each, a bounded floor query, per-person limits, tests        | Claude Code     |
 | 2026-11-24 | PR 7e fix D: `/api/health` added to the Firewall rule's record and dashboard steps                   | Claude Code     |
 | 2026-11-24 | PR 7e fix E: the Migrate production workflow uses a `production` environment that needs approval     | Claude Code     |
+| 2026-11-25 | PR 7e fix F: admins disable and enable accounts, logins end after a day unused, migration, tests     | Claude Code     |
