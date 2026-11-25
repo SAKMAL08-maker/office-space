@@ -225,3 +225,8 @@ Chosen by the owner for PR 7e, 2026-11-23.
 - The review's findings stay outside the repo, in a private file on the owner's laptop, until they are fixed; a short summary goes into `docs/` afterwards. Why: the repo is public (Claude's recommendation, accepted).
 - The review was split between two read-only subagents, with Claude re-checking their findings. Why: the owner asked for Claude's recommendation.
 - Claude builds all of the review's fixes, one PR each; the owner keeps the merges and says yes to each dashboard or GitHub setting change. Why: the owner asked Claude to do the work on its own.
+
+Chosen by Claude while building PR 7e fix B (security headers), 2026-11-24, for the owner to confirm in review.
+
+- Every path gets `frame-ancestors 'none'` plus `X-Frame-Options: DENY`, `nosniff`, `strict-origin-when-cross-origin` and a Permissions-Policy turning off camera, microphone, location, payment and USB. A full script policy (CSP with nonces) is left for later: it would make every page dynamic and needs testing against the 3D scene.
+- Because Next.js drops a route's header when the config already set it, the picture route's sandbox policy and the download route's no-referrer are repeated in `next.config.ts`, and a test checks them.
