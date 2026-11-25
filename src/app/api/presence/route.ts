@@ -1,4 +1,5 @@
 import { parseSpot, reportPresence } from "@/server/presence";
+import { takeUserTry } from "@/server/rate-limit";
 import { requireCheckedIn } from "@/server/session";
 
 /**
@@ -8,6 +9,15 @@ import { requireCheckedIn } from "@/server/session";
  */
 export async function POST(request: Request) {
   const viewer = await requireCheckedIn();
+  // Per person, so a script looping this cannot keep the database busy. A refused beat is
+  // harmless: the tab keeps its last answer and tries again on the next one.
+  const allowed = await takeUserTry(viewer.id, "presence");
+  if (!allowed.ok) {
+    return Response.json(
+      { error: "Too many updates. Wait a moment." },
+      { status: 429, headers: { "Retry-After": String(allowed.retryAfter) } },
+    );
+  }
   const spot = parseSpot(await request.json().catch(() => undefined));
   if (spot === undefined) {
     return Response.json({ error: "Send { spot: { x, z } } or { spot: null }." }, { status: 400 });

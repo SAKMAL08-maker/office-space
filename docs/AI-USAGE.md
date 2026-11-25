@@ -28,3 +28,4 @@ Session history is in [ai-logs/SESSION-LOG.md](ai-logs/SESSION-LOG.md).
 | 2026-11-23 | PR 7d Browser tests: Playwright, log in, check in, walk, check out at desktop and phone size, CI job | Claude Code     |
 | 2026-11-23 | PR 7e security review (two subagents, checked by Claude), and fix A: upload clean-up, picture checks | Claude Code     |
 | 2026-11-24 | PR 7e fix B: security headers on every page and route (framing, sniffing, referrer, permissions)     | Claude Code     |
+| 2026-11-24 | PR 7e fix C: at most 30 active projects each, a bounded floor query, per-person limits, tests        | Claude Code     |

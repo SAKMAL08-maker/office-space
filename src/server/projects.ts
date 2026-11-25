@@ -6,36 +6,52 @@ import { lockUser } from "./users";
 import { type Result, workDetailsProblem } from "./validation";
 import { endProjectWork } from "./work";
 
+/** Active projects one person may have at once. Each one is a cubicle on the floor. */
+export const MAX_ACTIVE_PROJECTS = 30;
 const PROJECT_LIST_LIMIT = 200;
 const NOT_ACTIVE = "This project is not active any more.";
+export const TOO_MANY_PROJECTS = `You can have at most ${MAX_ACTIVE_PROJECTS} active projects. Finish one first.`;
 
 type ProjectInput = { title: string; description: string };
 
-/** Gives the project the owner's lowest free seat. The lock stops two projects taking the same one. */
-async function addCubicle(tx: Tx, ownerId: string, projectId: string): Promise<void> {
+/**
+ * The owner's lowest free seat, or null when they already have the most active projects.
+ * The lock stops two projects taking the same seat, or both slipping past the limit, and is
+ * held until the caller's transaction ends.
+ */
+async function freeSeat(tx: Tx, ownerId: string): Promise<number | null> {
   await lockUser(tx, ownerId);
   const taken = await tx
     .select({ seat: cubicles.seat })
     .from(cubicles)
     .where(eq(cubicles.ownerId, ownerId))
     .orderBy(asc(cubicles.seat));
+  if (taken.length >= MAX_ACTIVE_PROJECTS) return null;
 
   let seat = 1;
   for (const cubicle of taken) {
     if (cubicle.seat !== seat) break;
     seat += 1;
   }
-  await tx.insert(cubicles).values({ id: randomUUID(), ownerId, projectId, seat });
+  return seat;
 }
 
-/** Writes a project and its cubicle inside the caller's transaction, so one cannot exist alone. */
+/**
+ * Writes a project and its cubicle inside the caller's transaction, so one cannot exist alone.
+ * False, with nothing written, when the owner already has the most active projects.
+ */
 export async function insertProjectWithCubicle(
   tx: Tx,
   input: ProjectInput & { ownerId: string; sourceTaskId?: string },
-): Promise<void> {
+): Promise<boolean> {
+  const seat = await freeSeat(tx, input.ownerId);
+  if (seat === null) return false;
   const id = randomUUID();
   await tx.insert(projects).values({ id, ...input });
-  await addCubicle(tx, input.ownerId, id);
+  await tx
+    .insert(cubicles)
+    .values({ id: randomUUID(), ownerId: input.ownerId, projectId: id, seat });
+  return true;
 }
 
 export async function createProject(ownerId: string, input: ProjectInput): Promise<Result> {
@@ -44,8 +60,10 @@ export async function createProject(ownerId: string, input: ProjectInput): Promi
   const problem = workDetailsProblem(title, description);
   if (problem) return { ok: false, error: problem };
 
-  await getDb().transaction((tx) => insertProjectWithCubicle(tx, { ownerId, title, description }));
-  return { ok: true };
+  const added = await getDb().transaction((tx) =>
+    insertProjectWithCubicle(tx, { ownerId, title, description }),
+  );
+  return added ? { ok: true } : { ok: false, error: TOO_MANY_PROJECTS };
 }
 
 const isOwnedBy = (ownerId: string, projectId: string) =>
@@ -89,6 +107,9 @@ export function finishProject(ownerId: string, projectId: string): Promise<Resul
 
 export function reopenProject(ownerId: string, projectId: string): Promise<Result> {
   return getDb().transaction(async (tx): Promise<Result> => {
+    // The seat comes first, so a refused reopen changes nothing.
+    const seat = await freeSeat(tx, ownerId);
+    if (seat === null) return { ok: false, error: TOO_MANY_PROJECTS };
     const reopened = await tx
       .update(projects)
       .set({ finishedAt: null })
@@ -96,7 +117,7 @@ export function reopenProject(ownerId: string, projectId: string): Promise<Resul
       .returning({ id: projects.id });
     if (reopened.length === 0) return { ok: false, error: "This project is already active." };
 
-    await addCubicle(tx, ownerId, projectId);
+    await tx.insert(cubicles).values({ id: randomUUID(), ownerId, projectId, seat });
     return { ok: true };
   });
 }

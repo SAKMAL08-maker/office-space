@@ -8,7 +8,9 @@ import {
   createProject,
   finishProject,
   listProjects,
+  MAX_ACTIVE_PROJECTS,
   reopenProject,
+  TOO_MANY_PROJECTS,
   updateProject,
 } from "@/server/projects";
 import { createFirstAdmin } from "@/server/setup";
@@ -290,6 +292,41 @@ describe.skipIf(!canUseDatabase)("work items", () => {
       expect((await reopenProject(senderId, id)).ok).toBe(false);
       expect((await finishProject(senderId, id)).ok).toBe(false);
       expect(await count()).toEqual({ projects: 1, cubicles: 0 });
+    });
+
+    it(`allows ${MAX_ACTIVE_PROJECTS} active projects, then refuses more until one is finished`, async () => {
+      for (let n = 1; n <= MAX_ACTIVE_PROJECTS; n++) expect((await create(`P${n}`)).ok).toBe(true);
+      const taskId = await sendAndGetId("One too many");
+
+      expect(await create("Extra")).toEqual({ ok: false, error: TOO_MANY_PROJECTS });
+      expect(await acceptTask(receiverId, taskId)).toEqual({ ok: false, error: TOO_MANY_PROJECTS });
+      // The refused accept changed nothing: the task is still waiting.
+      expect(await countInbox(receiverId)).toBe(1);
+      expect(await count()).toEqual({
+        projects: MAX_ACTIVE_PROJECTS,
+        cubicles: MAX_ACTIVE_PROJECTS,
+      });
+
+      const firstId = await projectId("P1");
+      await finishProject(receiverId, firstId);
+      expect((await create("Extra")).ok).toBe(true);
+      expect(await reopenProject(receiverId, firstId)).toEqual({
+        ok: false,
+        error: TOO_MANY_PROJECTS,
+      });
+      expect(
+        (await listProjects(receiverId)).find((p) => p.id === firstId)?.finishedAt,
+      ).not.toBeNull();
+
+      await finishProject(receiverId, await projectId("P2"));
+      expect((await acceptTask(receiverId, taskId)).ok).toBe(true);
+    });
+
+    it("holds the active-project limit when many are created at once", async () => {
+      for (let n = 1; n <= MAX_ACTIVE_PROJECTS - 2; n++) await create(`P${n}`);
+      const results = await Promise.all([1, 2, 3, 4, 5].map((n) => create(`Rush ${n}`)));
+      expect(results.filter((result) => result.ok)).toHaveLength(2);
+      expect((await count()).cubicles).toBe(MAX_ACTIVE_PROJECTS);
     });
 
     it("lists active projects before finished ones", async () => {

@@ -230,3 +230,9 @@ Chosen by Claude while building PR 7e fix B (security headers), 2026-11-24, for 
 
 - Every path gets `frame-ancestors 'none'` plus `X-Frame-Options: DENY`, `nosniff`, `strict-origin-when-cross-origin` and a Permissions-Policy turning off camera, microphone, location, payment and USB. A full script policy (CSP with nonces) is left for later: it would make every page dynamic and needs testing against the 3D scene.
 - Because Next.js drops a route's header when the config already set it, the picture route's sandbox policy and the download route's no-referrer are repeated in `next.config.ts`, and a test checks them.
+
+Chosen by Claude while building PR 7e fix C (limits), 2026-11-24, for the owner to confirm in review.
+
+- Each person may have 30 active projects (cubicles). Creating, accepting a task and reopening are refused past that; a refused accept leaves the task waiting. Finished projects do not count.
+- The floor loads only the cubicles of the offices it shows, at most 200 × 30.
+- Logged-in limits are per person, never per IP, so an office sharing one network is never blocked: presence 20 a minute (a tab sends 6), upload start and finish together 30 a minute. They use the same `rate_limits` table as the form limits. A refused presence beat is answered 429 and the tab simply tries again on its next beat.

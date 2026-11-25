@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { projects, tasks, users } from "@/db/schema";
-import { insertProjectWithCubicle } from "./projects";
+import { insertProjectWithCubicle, TOO_MANY_PROJECTS } from "./projects";
 import { lockUser } from "./users";
 import { MAX_REJECT_REASON_LENGTH, type Result, workDetailsProblem } from "./validation";
 
@@ -12,6 +12,9 @@ const TASK_LIST_LIMIT = 200;
 const NOT_WAITING = "This task is no longer waiting for an answer.";
 
 const isWaiting = eq(tasks.status, "pending");
+
+/** Thrown inside a transaction to undo it when the receiver has no free seat. */
+class NoFreeSeat extends Error {}
 
 export async function sendTask(
   senderId: string,
@@ -56,7 +59,16 @@ export async function sendTask(
  * The status change and the new project are saved together. Only one request can move a task
  * out of waiting, so a double click or a second tab cannot create a second project.
  */
-export function acceptTask(receiverId: string, taskId: string): Promise<Result> {
+export async function acceptTask(receiverId: string, taskId: string): Promise<Result> {
+  try {
+    return await acceptInTransaction(receiverId, taskId);
+  } catch (error) {
+    if (error instanceof NoFreeSeat) return { ok: false, error: TOO_MANY_PROJECTS };
+    throw error;
+  }
+}
+
+function acceptInTransaction(receiverId: string, taskId: string): Promise<Result> {
   return getDb().transaction(async (tx): Promise<Result> => {
     const [task] = await tx
       .update(tasks)
@@ -65,7 +77,13 @@ export function acceptTask(receiverId: string, taskId: string): Promise<Result> 
       .returning({ title: tasks.title, description: tasks.description });
     if (!task) return { ok: false, error: NOT_WAITING };
 
-    await insertProjectWithCubicle(tx, { ownerId: receiverId, sourceTaskId: taskId, ...task });
+    const added = await insertProjectWithCubicle(tx, {
+      ownerId: receiverId,
+      sourceTaskId: taskId,
+      ...task,
+    });
+    // Throwing undoes the status change too, so the task stays waiting until a seat is free.
+    if (!added) throw new NoFreeSeat();
     return { ok: true };
   });
 }

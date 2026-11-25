@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "@/db/client";
 import { cubicles, projects, tasks, users, workSessions } from "@/db/schema";
 import type { CubicleInfo, OfficeInfo } from "@/world/layout";
+import { MAX_ACTIVE_PROJECTS } from "./projects";
 import { requireCheckedIn } from "./session";
 
 const OFFICE_LIMIT = 200;
@@ -39,6 +40,9 @@ export async function loadFloor(viewerId: string): Promise<Floor> {
     .from(users)
     .orderBy(asc(users.name), asc(users.id))
     .limit(OFFICE_LIMIT);
+  if (people.length === 0) return { viewerId, offices: [], key: floorKey([]) };
+  // Only the cubicles of the offices shown, and never more than they can hold, so the floor
+  // (loaded on every presence beat) stays a bounded amount of work.
   const taken = await db
     .select({
       ownerId: cubicles.ownerId,
@@ -57,7 +61,14 @@ export async function loadFloor(viewerId: string): Promise<Floor> {
       workSessions,
       and(eq(workSessions.projectId, projects.id), isNull(workSessions.endedAt)),
     )
-    .orderBy(asc(cubicles.seat));
+    .where(
+      inArray(
+        cubicles.ownerId,
+        people.map((person) => person.id),
+      ),
+    )
+    .orderBy(asc(cubicles.seat))
+    .limit(OFFICE_LIMIT * MAX_ACTIVE_PROJECTS);
 
   const cubiclesByOwner = new Map<string, CubicleInfo[]>();
   for (const { ownerId, ...cubicle } of taken) {
